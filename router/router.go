@@ -3,7 +3,8 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"novel_crawler/internal/business/truyen_full"
+	"novel_crawler/internal/business"
+	"novel_crawler/internal/repository"
 
 	"novel_crawler/config"
 )
@@ -11,9 +12,9 @@ import (
 func Start() {
 	router := gin.Default()
 
-	truyenFullAdapter := truyen_full.NewSourceAdapter("truyenfull.vn")
-	novelService := truyen_full.NewService(truyenFullAdapter)
-	novelHandler := truyen_full.NewHandler(novelService)
+	truyenFullAdapter := repository.NewSourceAdapter("truyenfull.vn")
+	novelService := business.NewService(truyenFullAdapter)
+	novelHandler := business.NewHandler(novelService)
 
 	router.GET("/genres", novelHandler.GetAllGenres)
 	router.GET("/genres/:genre_id", novelHandler.GetNovelsByGenre)

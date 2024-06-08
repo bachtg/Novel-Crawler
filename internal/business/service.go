@@ -1,14 +1,15 @@
-package truyen_full
+package business
 
 import (
 	"novel_crawler/internal/model"
+	"novel_crawler/internal/repository"
 )
 
 type Service struct {
-	SourceAdapter
+	repository.SourceAdapter
 }
 
-func NewService(sourceAdapter SourceAdapter) *Service {
+func NewService(sourceAdapter repository.SourceAdapter) *Service {
 	return &Service{sourceAdapter}
 }
 

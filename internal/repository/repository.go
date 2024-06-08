@@ -1,4 +1,4 @@
-package truyen_full
+package repository
 
 import (
 	"github.com/gocolly/colly/v2"

@@ -1,4 +1,4 @@
-package truyen_full
+package business
 
 import (
 	"fmt"
