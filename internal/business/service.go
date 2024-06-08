@@ -14,30 +14,44 @@ func NewService(sourceAdapter repository.SourceAdapter) *Service {
 }
 
 func (service *Service) GetAllGenres() ([]*model.Genre, error) {
-	url := "https://truyenfull.vn/"
-	return service.SourceAdapter.GetAllGenres(url)
+	return service.SourceAdapter.GetAllGenres()
 }
 
-func (service *Service) GetNovelsByGenre(genreId string, page string) ([]*model.Novel, int, error) {
+func (service *Service) GetNovelsByGenre(genreId string, page string) (*model.GetNovelsResponse, error) {
 	if page == "" {
 		page = "1"
 	}
-	url := "https://truyenfull.vn/the-loai/" + genreId + "/trang-" + page
-	return service.SourceAdapter.GetNovelsByGenre(url)
+	return service.SourceAdapter.GetNovelsByGenre(genreId, page)
 }
 
-func (service *Service) GetNovelsByCategory(categoryId string, page string) ([]*model.Novel, int, error) {
+func (service *Service) GetNovelsByCategory(categoryId string, page string) (*model.GetNovelsResponse, error) {
 	if page == "" {
 		page = "1"
 	}
-	url := "https://truyenfull.vn/danh-sach/" + categoryId + "/trang-" + page
-	return service.SourceAdapter.GetNovelsByCategory(url)
+	return service.SourceAdapter.GetNovelsByCategory(categoryId, page)
 }
 
 func (service *Service) GetDetailNovel(novelId string, page string) (*model.Novel, int, error) {
 	if page == "" {
 		page = "1"
 	}
-	url := "https://truyenfull.vn/" + novelId + "/trang-" + page
-	return service.SourceAdapter.GetDetailNovel(url)
+	return service.SourceAdapter.GetDetailNovel(novelId, page)
+}
+
+func (service *Service) GetNovelsByAuthor(authorId string, page string) (*model.GetNovelsResponse, error) {
+	if page == "" {
+		page = "1"
+	}
+	return service.SourceAdapter.GetNovelsByAuthor(authorId, page)
+}
+
+func (service *Service) GetNovelsByKeyword(keyword string, page string) (*model.GetNovelsResponse, error) {
+	if page == "" {
+		page = "1"
+	}
+	return service.SourceAdapter.GetNovelByKeyword(keyword, page)
+}
+
+func (service *Service) GetDetailChapter(novelId string, chapterId string) (*model.DetailChapterResponse, error) {
+	return service.SourceAdapter.GetDetailChapter(novelId, chapterId)
 }
