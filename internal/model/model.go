@@ -38,6 +38,14 @@ type Novel struct {
 	LatestChapter string
 }
 
+type GetNovelsRequest struct {
+	Page       string
+	Keyword    string
+	GenreId    string
+	CategoryId string
+	AuthorId   string
+}
+
 type GetNovelsResponse struct {
 	Novels  []*Novel
 	NumPage int

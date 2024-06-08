@@ -1,6 +1,7 @@
 package constant
 
 const (
-	Success       = 0
-	InternalError = 1
+	Success        = 0
+	InternalError  = 1
+	InvalidRequest = 2
 )

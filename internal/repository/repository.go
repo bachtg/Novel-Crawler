@@ -10,10 +10,10 @@ import (
 )
 
 type SourceAdapter interface {
-	GetNovelsByGenre(genreId string, page string) (*model.GetNovelsResponse, error)
-	GetNovelsByCategory(categoryId string, page string) (*model.GetNovelsResponse, error)
-	GetNovelsByAuthor(authorId string, page string) (*model.GetNovelsResponse, error)
-	GetNovelByKeyword(keyword string, page string) (*model.GetNovelsResponse, error)
+	GetNovelsByGenre(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
+	GetNovelsByCategory(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
+	GetNovelsByAuthor(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
+	GetNovelsByKeyword(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
 
 	GetDetailNovel(novelId string, page string) (*model.Novel, int, error)
 
@@ -114,8 +114,8 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovels(url string) (*model.GetNov
 	}, nil
 }
 
-func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByGenre(genreId string, page string) (*model.GetNovelsResponse, error) {
-	url := "https://truyenfull.vn/the-loai/" + genreId + "/trang-" + page
+func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByGenre(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
+	url := "https://truyenfull.vn/the-loai/" + request.GenreId + "/trang-" + request.Page
 	getNovelsResponse, err := truyenFullAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -123,8 +123,8 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByGenre(genreId string, pag
 	return getNovelsResponse, nil
 }
 
-func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByCategory(categoryId string, page string) (*model.GetNovelsResponse, error) {
-	url := "https://truyenfull.vn/danh-sach/" + categoryId + "/trang-" + page
+func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByCategory(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
+	url := "https://truyenfull.vn/danh-sach/" + request.CategoryId + "/trang-" + request.Page
 	getNovelsResponse, err := truyenFullAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -211,8 +211,8 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailNovel(novelId string, page 
 	return novel, numPage, nil
 }
 
-func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByAuthor(authorId string, page string) (*model.GetNovelsResponse, error) {
-	url := "https://truyenfull.vn/tac-gia/" + authorId + "/trang-" + page
+func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByAuthor(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
+	url := "https://truyenfull.vn/tac-gia/" + request.AuthorId + "/trang-" + request.Page
 	getNovelsResponse, err := truyenFullAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -220,8 +220,8 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByAuthor(authorId string, p
 	return getNovelsResponse, nil
 }
 
-func (truyenFullAdapter *TruyenFullAdapter) GetNovelByKeyword(keyword string, page string) (*model.GetNovelsResponse, error) {
-	url := "https://truyenfull.vn/tim-kiem/?tukhoa=" + keyword + "&page=" + page
+func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByKeyword(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
+	url := "https://truyenfull.vn/tim-kiem/?tukhoa=" + request.Keyword + "&page=" + request.Page
 	getNovelsResponse, err := truyenFullAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err

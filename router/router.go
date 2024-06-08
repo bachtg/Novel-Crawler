@@ -17,12 +17,9 @@ func Start() {
 	novelHandler := business.NewHandler(novelService)
 
 	router.GET("/genres", novelHandler.GetAllGenres)
-	router.GET("/genres/:genre_id", novelHandler.GetNovelsByGenre)
 	router.GET("/novels/:novel_id", novelHandler.GetDetailNovel)
 	router.GET("/novels/:novel_id/:chapter_id", novelHandler.GetDetailChapter)
-	router.GET("/novels", novelHandler.GetNovelsByKeyword)
-	router.GET("/authors/:author_id", novelHandler.GetNovelByAuthor)
-	router.GET("/categories/:category_id", novelHandler.GetNovelByCategory)
+	router.GET("/novels", novelHandler.GetNovels)
 
 	config.Cfg.Logger.Info("Server's running on", zap.String("address", config.Cfg.Address))
 	_ = router.Run(config.Cfg.Address)
