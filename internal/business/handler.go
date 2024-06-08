@@ -37,19 +37,24 @@ func (handler *Handler) GetDetailNovel(ctx *gin.Context) {
 	page := ctx.Query("page")
 	novelId := ctx.Param("novel_id")
 
-	novel, numPage, err := handler.Service.GetDetailNovel(novelId, page)
+	request := &model.GetDetailNovelRequest{
+		NovelId: novelId,
+		Page:    page,
+	}
+
+	getDetailNovelResponse, err := handler.Service.GetDetailNovel(request)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
 			"code": err.Error(),
 		})
 		ctx.Abort()
 	}
-	novel.Id = novelId
+	getDetailNovelResponse.Novel.Id = novelId
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": constant.Success,
 		"data": gin.H{
-			"novel":   novel,
-			"numPage": numPage,
+			"novel":   getDetailNovelResponse.Novel,
+			"numPage": getDetailNovelResponse.NumPage,
 		},
 	})
 }
@@ -81,10 +86,12 @@ func (handler *Handler) GetNovels(ctx *gin.Context) {
 }
 
 func (handler *Handler) GetDetailChapter(ctx *gin.Context) {
-	novelId := ctx.Param("novel_id")
-	chapterId := ctx.Param("chapter_id")
+	request := &model.GetDetailChapterRequest{
+		NovelId:   ctx.Param("novel_id"),
+		ChapterId: ctx.Param("chapter_id"),
+	}
 
-	detailChapterResponse, err := handler.Service.GetDetailChapter(novelId, chapterId)
+	getDetailChapterResponse, err := handler.Service.GetDetailChapter(request)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
 			"code": err.Error(),
@@ -94,10 +101,10 @@ func (handler *Handler) GetDetailChapter(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": constant.Success,
 		"data": gin.H{
-			"novels":           detailChapterResponse.Novel,
-			"current_chapter":  detailChapterResponse.CurrentChapter,
-			"previous_chapter": detailChapterResponse.PreviousChapter,
-			"next_chapter":     detailChapterResponse.NextChapter,
+			"novels":           getDetailChapterResponse.Novel,
+			"current_chapter":  getDetailChapterResponse.CurrentChapter,
+			"previous_chapter": getDetailChapterResponse.PreviousChapter,
+			"next_chapter":     getDetailChapterResponse.NextChapter,
 		},
 	})
 }

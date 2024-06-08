@@ -40,13 +40,13 @@ func (service *Service) GetAllGenres() ([]*model.Genre, error) {
 	return service.SourceAdapter.GetAllGenres()
 }
 
-func (service *Service) GetDetailNovel(novelId string, page string) (*model.Novel, int, error) {
-	if page == "" {
-		page = "1"
+func (service *Service) GetDetailNovel(request *model.GetDetailNovelRequest) (*model.GetDetailNovelResponse, error) {
+	if request.Page == "" {
+		request.Page = "1"
 	}
-	return service.SourceAdapter.GetDetailNovel(novelId, page)
+	return service.SourceAdapter.GetDetailNovel(request)
 }
 
-func (service *Service) GetDetailChapter(novelId string, chapterId string) (*model.DetailChapterResponse, error) {
-	return service.SourceAdapter.GetDetailChapter(novelId, chapterId)
+func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest) (*model.GetDetailChapterResponse, error) {
+	return service.SourceAdapter.GetDetailChapter(request)
 }

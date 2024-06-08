@@ -2,25 +2,13 @@ package repository
 
 import (
 	"github.com/gocolly/colly/v2"
+	"novel_crawler/config"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/util"
 	"strconv"
 	"strings"
 )
-
-type SourceAdapter interface {
-	GetNovelsByGenre(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
-	GetNovelsByCategory(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
-	GetNovelsByAuthor(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
-	GetNovelsByKeyword(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
-
-	GetDetailNovel(novelId string, page string) (*model.Novel, int, error)
-
-	GetDetailChapter(novelId string, chapterId string) (*model.DetailChapterResponse, error)
-
-	GetAllGenres() ([]*model.Genre, error)
-}
 
 type TruyenFullAdapter struct {
 	collector *colly.Collector
@@ -39,7 +27,7 @@ func NewTruyenFullAdapter() SourceAdapter {
 
 func (truyenFullAdapter *TruyenFullAdapter) GetAllGenres() ([]*model.Genre, error) {
 	var genres []*model.Genre
-	url := "https://truyenfull.vn/"
+	url := config.Cfg.TruyenFullBaseUrl
 
 	truyenFullAdapter.collector.OnHTML(".dropdown-menu a", func(e *colly.HTMLElement) {
 		url := e.Attr("href")
@@ -73,7 +61,10 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovels(url string) (*model.GetNov
 		id := util.GetId(e.ChildAttr(".truyen-title > a", "href"))
 		coverImage := e.ChildAttr("div[data-image]", "data-image")
 		title := e.ChildAttr(".truyen-title > a", "title")
-		latestChapter := e.ChildText(".text-info")
+		latestChapter := &model.Chapter{
+			Id:    util.GetId(e.ChildAttr(".text-info > div > a", "href")),
+			Title: e.ChildText(".text-info"),
+		}
 
 		var authors []*model.Author
 		e.ForEach(".author", func(_ int, child *colly.HTMLElement) {
@@ -115,7 +106,7 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovels(url string) (*model.GetNov
 }
 
 func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByGenre(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	url := "https://truyenfull.vn/the-loai/" + request.GenreId + "/trang-" + request.Page
+	url := config.Cfg.TruyenFullBaseUrl + "/the-loai/" + request.GenreId + "/trang-" + request.Page
 	getNovelsResponse, err := truyenFullAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -124,7 +115,7 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByGenre(request *model.GetN
 }
 
 func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByCategory(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	url := "https://truyenfull.vn/danh-sach/" + request.CategoryId + "/trang-" + request.Page
+	url := config.Cfg.TruyenFullBaseUrl + "/danh-sach/" + request.CategoryId + "/trang-" + request.Page
 	getNovelsResponse, err := truyenFullAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -132,14 +123,14 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByCategory(request *model.G
 	return getNovelsResponse, nil
 }
 
-func (truyenFullAdapter *TruyenFullAdapter) GetDetailNovel(novelId string, page string) (*model.Novel, int, error) {
+func (truyenFullAdapter *TruyenFullAdapter) GetDetailNovel(request *model.GetDetailNovelRequest) (*model.GetDetailNovelResponse, error) {
 	var (
 		novel    *model.Novel
 		authors  []*model.Author
 		genres   []*model.Genre
 		chapters []*model.Chapter
 		numPage  = 1
-		url      = "https://truyenfull.vn/" + novelId + "/trang-" + page
+		url      = config.Cfg.TruyenFullBaseUrl + "/" + request.NovelId + "/trang-" + request.Page
 	)
 
 	truyenFullAdapter.collector.OnHTML(".col-truyen-main", func(e *colly.HTMLElement) {
@@ -200,7 +191,7 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailNovel(novelId string, page 
 
 	err := truyenFullAdapter.collector.Visit(url)
 	if err != nil {
-		return nil, 0, &model.Err{
+		return nil, &model.Err{
 			Code:    constant.InternalError,
 			Message: err.Error(),
 		}
@@ -208,11 +199,14 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailNovel(novelId string, page 
 
 	truyenFullAdapter.collector.Wait()
 
-	return novel, numPage, nil
+	return &model.GetDetailNovelResponse{
+		Novel:   novel,
+		NumPage: numPage,
+	}, nil
 }
 
 func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByAuthor(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	url := "https://truyenfull.vn/tac-gia/" + request.AuthorId + "/trang-" + request.Page
+	url := config.Cfg.TruyenFullBaseUrl + "/tac-gia/" + request.AuthorId + "/trang-" + request.Page
 	getNovelsResponse, err := truyenFullAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -221,7 +215,7 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByAuthor(request *model.Get
 }
 
 func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByKeyword(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	url := "https://truyenfull.vn/tim-kiem/?tukhoa=" + request.Keyword + "&page=" + request.Page
+	url := config.Cfg.TruyenFullBaseUrl + "/tim-kiem/?tukhoa=" + request.Keyword + "&page=" + request.Page
 	getNovelsResponse, err := truyenFullAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -229,43 +223,40 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovelsByKeyword(request *model.Ge
 	return getNovelsResponse, nil
 }
 
-func (truyenFullAdapter *TruyenFullAdapter) GetDetailChapter(novelId string, chapterId string) (*model.DetailChapterResponse, error) {
+func (truyenFullAdapter *TruyenFullAdapter) GetDetailChapter(request *model.GetDetailChapterRequest) (*model.GetDetailChapterResponse, error) {
 	var (
-		detailChapterResponse = &model.DetailChapterResponse{}
-		url                   = "https://truyenfull.vn/" + novelId + "/" + chapterId
+		novel          = &model.Novel{}
+		currentChapter = &model.Chapter{}
+		prevChapter    = &model.Chapter{}
+		nextChapter    = &model.Chapter{}
+
+		url = config.Cfg.TruyenFullBaseUrl + "/" + request.NovelId + "/" + request.ChapterId
 	)
 
 	truyenFullAdapter.collector.OnHTML(".truyen-title", func(e *colly.HTMLElement) {
 		id := util.GetId(e.Attr("href"))
 		title := e.Text
-		detailChapterResponse.Novel = &model.Novel{
-			Id:    id,
-			Title: title,
-		}
+		novel.Id = id
+		novel.Title = title
 	})
 
 	truyenFullAdapter.collector.OnHTML(".chapter-title", func(e *colly.HTMLElement) {
 		id := util.GetId(e.Attr("href"))
 		title := e.Text
-		detailChapterResponse.CurrentChapter = &model.Chapter{
-			Id:    id,
-			Title: title,
-		}
+		currentChapter.Id = id
+		currentChapter.Title = title
 	})
 
 	truyenFullAdapter.collector.OnHTML(".chapter-c", func(e *colly.HTMLElement) {
-		detailChapterResponse.CurrentChapter.Content, _ = e.DOM.Html()
+		currentChapter.Content, _ = e.DOM.Html()
 	})
 
 	truyenFullAdapter.collector.OnHTML(".btn-group", func(e *colly.HTMLElement) {
 		previousChapterId := util.GetId(e.ChildAttr("#prev_chap", "href"))
-		detailChapterResponse.PreviousChapter = &model.Chapter{
-			Id: previousChapterId,
-		}
+		prevChapter.Id = previousChapterId
+
 		nextChapterId := util.GetId(e.ChildAttr("#next_chap", "href"))
-		detailChapterResponse.NextChapter = &model.Chapter{
-			Id: nextChapterId,
-		}
+		nextChapter.Id = nextChapterId
 	})
 
 	err := truyenFullAdapter.collector.Visit(url)
@@ -278,5 +269,10 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailChapter(novelId string, cha
 
 	truyenFullAdapter.collector.Wait()
 
-	return detailChapterResponse, nil
+	return &model.GetDetailChapterResponse{
+		Novel:           novel,
+		CurrentChapter:  currentChapter,
+		PreviousChapter: prevChapter,
+		NextChapter:     nextChapter,
+	}, nil
 }

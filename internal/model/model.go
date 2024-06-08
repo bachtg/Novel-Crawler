@@ -35,7 +35,7 @@ type Novel struct {
 	Description   string
 	Status        string
 	Chapters      []*Chapter
-	LatestChapter string
+	LatestChapter *Chapter
 }
 
 type GetNovelsRequest struct {
@@ -51,9 +51,24 @@ type GetNovelsResponse struct {
 	NumPage int
 }
 
-type DetailChapterResponse struct {
+type GetDetailChapterRequest struct {
+	NovelId   string
+	ChapterId string
+}
+
+type GetDetailChapterResponse struct {
 	Novel           *Novel
 	CurrentChapter  *Chapter
 	NextChapter     *Chapter
 	PreviousChapter *Chapter
+}
+
+type GetDetailNovelRequest struct {
+	NovelId string
+	Page    string
+}
+
+type GetDetailNovelResponse struct {
+	Novel   *Novel
+	NumPage int
 }
