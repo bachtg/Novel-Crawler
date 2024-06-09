@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
+	"fmt"
 )
 
 type Handler struct {
@@ -188,27 +189,28 @@ func (handler *Handler) RegisterSourceAdapter(ctx *gin.Context) {
 	})
 }
 
-//func (handler *Handler) Download(ctx *gin.Context) {
-//	downloadChapterRequest := &model.DownloadChapterRequest{}
-//	if err := ctx.ShouldBind(&downloadChapterRequest); err != nil {
-//		ctx.JSON(http.StatusOK, gin.H{
-//			"code":    constant.InvalidRequest,
-//			"message": err.Error(),
-//		})
-//		ctx.Abort()
-//		return
-//	}
-//
-//	downloadChapterResponse, err := handler.Service.Download(downloadChapterRequest)
-//
-//	if err != nil {
-//		ctx.JSON(http.StatusOK, gin.H{
-//			"code":    err.(*model.Err).Code,
-//			"message": err.Error(),
-//		})
-//		ctx.Abort()
-//	}
-//	filename := fmt.Sprintf("%s.%s", downloadChapterResponse.Filename, "pdf")
-//	ctx.Header("Content-Disposition", "attachment; filename="+filename)
-//	ctx.Data(http.StatusOK, "application/pdf", downloadChapterResponse.BytesData)
-//}
+func (handler *Handler) Download(ctx *gin.Context) {
+	downloadChapterRequest := &model.DownloadChapterRequest{}
+	if err := ctx.ShouldBind(&downloadChapterRequest); err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code":    constant.InvalidRequest,
+			"message": err.Error(),
+		})
+		ctx.Abort()
+		return
+	}
+
+	downloadChapterResponse, err := handler.Service.Download(downloadChapterRequest)
+
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code":    err.(*model.Err).Code,
+			"message": err.Error(),
+		})
+		ctx.Abort()
+	}
+	filename := fmt.Sprintf("%s.%s", downloadChapterResponse.Filename, downloadChapterRequest.Type)
+	fmt.Println(filename)
+	ctx.Header("Content-Disposition", "attachment; filename="+filename)
+	ctx.Data(http.StatusOK, "application/"+downloadChapterRequest.Type, downloadChapterResponse.BytesData)
+}

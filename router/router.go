@@ -14,9 +14,10 @@ func Start() {
 	sourceAdapterManager := repository.SourceAdapterManager{}
 
 	//truyenFullAdapter := repository.NewTruyenFullAdapter()
-	tangThuVienAdapter := repository.NewTangThuVienAdapter()
+	//tangThuVienAdapter := repository.NewTangThuVienAdapter()
+	netTruyenAdapter := repository.NewNetTruyenAdapter()
 
-	err := sourceAdapterManager.AddNewSource(&tangThuVienAdapter)
+	err := sourceAdapterManager.AddNewSource(&netTruyenAdapter)
 	if err != nil {
 		config.Cfg.Logger.Error(err.Error())
 		panic(err)
@@ -33,7 +34,7 @@ func Start() {
 	router.POST("/sources/:domain", novelHandler.RegisterSourceAdapter)
 	router.PATCH("/sources", novelHandler.UpdateSourcePriority)
 
-	//router.POST("/downloads", novelHandler.Download)
+	router.POST("/downloads", novelHandler.Download)
 
 	config.Cfg.Logger.Info("Server's running on", zap.String("address", config.Cfg.Address))
 	_ = router.Run(config.Cfg.Address)

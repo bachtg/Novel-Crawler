@@ -4,6 +4,7 @@ import (
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/internal/repository"
+	"fmt"
 )
 
 type Service struct {
@@ -92,25 +93,41 @@ func (service *Service) RegisterSourceAdapter(domain string) error {
 	return nil
 }
 
-//func (service *Service) Download(request *model.DownloadChapterRequest) (*model.DownloadChapterResponse, error) {
-//
-//	getDetailChapterResponse, err := service.SourceAdapter.GetDetailChapter(&model.GetDetailChapterRequest{
-//		ChapterId: request.ChapterId,
-//		NovelId:   request.NovelId,
-//	})
-//
-//	bytesData, err := Generate("<p>" + getDetailChapterResponse.CurrentChapter.Content + "</p>\n")
-//	if err != nil {
-//		return nil, &model.Err{
-//			Code:    constant.InternalError,
-//			Message: err.Error(),
-//		}
-//	}
-//
-//	filename := "[" + getDetailChapterResponse.Novel.Title + "] " + getDetailChapterResponse.CurrentChapter.Title
-//
-//	return &model.DownloadChapterResponse{
-//		Filename:  filename,
-//		BytesData: bytesData,
-//	}, nil
-//}
+func (service *Service) Download(request *model.DownloadChapterRequest) (*model.DownloadChapterResponse, error) {
+
+	getDetailChapterResponse, err := service.GetDetailChapter(&model.GetDetailChapterRequest{
+		ChapterId: request.ChapterId,
+		NovelId:   request.NovelId,
+	})
+	if err != nil {
+		return nil, &model.Err{
+            Code:    constant.InternalError,
+            Message: err.Error(),
+        }
+	}
+	var exporter repository.Exporter
+	fmt.Println(request.ChapterId)
+	fmt.Println(request.NovelId)
+	fmt.Println(request.Type)
+
+	if (request.Type == "pdf") {
+		exporter = repository.NewPDFExporter()
+	} else {
+		exporter = repository.NewEpubExporter()
+	}
+
+	bytesData, err := exporter.Generate("<p>" + getDetailChapterResponse.CurrentChapter.Content + "</p>\n")
+	if err != nil {
+		return nil, &model.Err{
+			Code:    constant.InternalError,
+			Message: err.Error(),
+		}
+	}
+
+	filename := "[" + getDetailChapterResponse.Novel.Title + "] " + getDetailChapterResponse.CurrentChapter.Title
+
+	return &model.DownloadChapterResponse{
+		Filename:  filename,
+		BytesData: bytesData,
+	}, nil
+}

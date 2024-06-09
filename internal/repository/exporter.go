@@ -17,12 +17,16 @@ type ExporterManager struct {
 }
 
 type PDFExporter struct {
+
+}
+
+func NewPDFExporter() Exporter {
+	return &PDFExporter{}
 }
 
 func (pdfExporter *PDFExporter) Generate(content string) ([]byte, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-
 	part, err := writer.CreateFormFile("files", "document.html")
 	if err != nil {
 		return nil, err
