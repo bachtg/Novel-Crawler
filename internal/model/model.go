@@ -57,6 +57,10 @@ type GetDetailChapterRequest struct {
 	SourceDomain string
 }
 
+type Source struct {
+	Id string
+}
+
 type GetDetailChapterResponse struct {
 	Novel           *Novel
 	CurrentChapter  *Chapter

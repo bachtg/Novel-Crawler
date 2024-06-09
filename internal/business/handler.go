@@ -15,6 +15,55 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{Service: service}
 }
 
+func (handler *Handler) GetAllSources(ctx *gin.Context) {
+	sources, err := handler.Service.GetAllSources()
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code":    err.(*model.Err).Code,
+			"message": err.Error(),
+		})
+		ctx.Abort()
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": constant.Success,
+		"data": gin.H{
+			"sources": sources,
+		},
+	})
+}
+
+func (handler *Handler) UpdateSourcePriority(ctx *gin.Context) {
+	body := struct {
+		Sources []string `json:"sources"`
+	}{}
+	err := ctx.ShouldBindJSON(&body)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code":    constant.InvalidRequest,
+			"message": err.Error(),
+		})
+		ctx.Abort()
+		return
+	}
+	err = handler.Service.UpdateSourcePriority(body.Sources)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code":    err.(*model.Err).Code,
+			"message": err.Error(),
+		})
+		ctx.Abort()
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": constant.Success,
+		"data": gin.H{
+			"body": body,
+		},
+	})
+}
+
 func (handler *Handler) GetAllGenres(ctx *gin.Context) {
 	genres, err := handler.Service.GetAllGenres()
 	if err != nil {
@@ -23,6 +72,7 @@ func (handler *Handler) GetAllGenres(ctx *gin.Context) {
 			"message": err.Error(),
 		})
 		ctx.Abort()
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": constant.Success,
@@ -48,6 +98,7 @@ func (handler *Handler) GetDetailNovel(ctx *gin.Context) {
 			"message": err.Error(),
 		})
 		ctx.Abort()
+		return
 	}
 	getDetailNovelResponse.Novel.Id = novelId
 	ctx.JSON(http.StatusOK, gin.H{
@@ -76,6 +127,7 @@ func (handler *Handler) GetNovels(ctx *gin.Context) {
 			"message": err.Error(),
 		})
 		ctx.Abort()
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": constant.Success,
@@ -107,6 +159,7 @@ func (handler *Handler) GetDetailChapter(ctx *gin.Context) {
 			"message": err.Error(),
 		})
 		ctx.Abort()
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": constant.Success,
@@ -119,6 +172,22 @@ func (handler *Handler) GetDetailChapter(ctx *gin.Context) {
 	})
 }
 
+func (handler *Handler) RegisterSourceAdapter(ctx *gin.Context) {
+	domain := ctx.Param("domain")
+	err := handler.Service.RegisterSourceAdapter(domain)
+
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": err.Error(),
+		})
+		ctx.Abort()
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": constant.Success,
+	})
+}
+
 //func (handler *Handler) Download(ctx *gin.Context) {
 //	downloadChapterRequest := &model.DownloadChapterRequest{}
 //	if err := ctx.ShouldBind(&downloadChapterRequest); err != nil {
@@ -127,6 +196,7 @@ func (handler *Handler) GetDetailChapter(ctx *gin.Context) {
 //			"message": err.Error(),
 //		})
 //		ctx.Abort()
+//		return
 //	}
 //
 //	downloadChapterResponse, err := handler.Service.Download(downloadChapterRequest)

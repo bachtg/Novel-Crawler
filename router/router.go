@@ -3,10 +3,9 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"novel_crawler/config"
 	"novel_crawler/internal/business"
 	"novel_crawler/internal/repository"
-
-	"novel_crawler/config"
 )
 
 func Start() {
@@ -14,10 +13,10 @@ func Start() {
 
 	sourceAdapterManager := repository.SourceAdapterManager{}
 
-	truyenFullAdapter := repository.NewTruyenFullAdapter()
+	//truyenFullAdapter := repository.NewTruyenFullAdapter()
 	tangThuVienAdapter := repository.NewTangThuVienAdapter()
 
-	err := sourceAdapterManager.AddNewSource(&truyenFullAdapter, &tangThuVienAdapter)
+	err := sourceAdapterManager.AddNewSource(&tangThuVienAdapter)
 	if err != nil {
 		config.Cfg.Logger.Error(err.Error())
 		panic(err)
@@ -30,6 +29,9 @@ func Start() {
 	router.GET("/novels/:novel_id", novelHandler.GetDetailNovel)
 	router.GET("/novels/:novel_id/:chapter_id", novelHandler.GetDetailChapter)
 	router.GET("/novels", novelHandler.GetNovels)
+	router.GET("/sources", novelHandler.GetAllSources)
+	router.POST("/sources/:domain", novelHandler.RegisterSourceAdapter)
+	router.PATCH("/sources", novelHandler.UpdateSourcePriority)
 
 	//router.POST("/downloads", novelHandler.Download)
 

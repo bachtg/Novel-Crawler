@@ -21,23 +21,25 @@ type SourceAdapter interface {
 }
 
 type SourceAdapterManager struct {
-	CurrentSource *SourceAdapter
-	SourceMapping map[string]*SourceAdapter
+	CurrentSource   *SourceAdapter
+	SourceMapping   map[string]*SourceAdapter
+	PriorityMapping map[string]int
 }
 
 func (sourceAdapterManager *SourceAdapterManager) AddNewSource(sources ...*SourceAdapter) error {
 
-	if sourceAdapterManager.SourceMapping == nil {
+	if sourceAdapterManager.CurrentSource == nil {
 		sourceAdapterManager.SourceMapping = make(map[string]*SourceAdapter)
+		sourceAdapterManager.PriorityMapping = make(map[string]int)
+		if len(sources) > 0 {
+			sourceAdapterManager.CurrentSource = sources[0]
+		}
 	}
 
-	if len(sources) != 0 && sourceAdapterManager.CurrentSource == nil {
-		sourceAdapterManager.CurrentSource = sources[0]
-	}
-
-	for _, source := range sources {
+	for index, source := range sources {
 		sourceDomain := (*source).GetDomain()
 		sourceAdapterManager.SourceMapping[sourceDomain] = source
+		sourceAdapterManager.PriorityMapping[sourceDomain] = index
 	}
 
 	if sourceAdapterManager.CurrentSource != nil {
@@ -48,4 +50,25 @@ func (sourceAdapterManager *SourceAdapterManager) AddNewSource(sources ...*Sourc
 		Code:    constant.NoSourceFound,
 		Message: "No source found",
 	}
+}
+
+func (sourceAdapterManager *SourceAdapterManager) GetAllSources() ([]*model.Source, error) {
+	numSource := len(sourceAdapterManager.SourceMapping)
+
+	if numSource == 0 {
+		return nil, &model.Err{
+			Code:    constant.NoSourceFound,
+			Message: "No source found",
+		}
+	}
+
+	sources := make([]*model.Source, numSource)
+
+	for key, value := range sourceAdapterManager.PriorityMapping {
+		sources[value] = &model.Source{
+			Id: key,
+		}
+	}
+
+	return sources, nil
 }

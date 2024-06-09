@@ -1,7 +1,6 @@
 package business
 
 import (
-	"fmt"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/internal/repository"
@@ -53,8 +52,6 @@ func (service *Service) GetDetailNovel(request *model.GetDetailNovelRequest) (*m
 }
 
 func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest) (*model.GetDetailChapterResponse, error) {
-	fmt.Println(request)
-
 	if request.SourceDomain != "" {
 		source, exists := service.SourceAdapterManager.SourceMapping[request.SourceDomain]
 		if exists {
@@ -63,6 +60,36 @@ func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest)
 	}
 	source := *service.SourceAdapterManager.CurrentSource
 	return source.GetDetailChapter(request)
+}
+
+func (service *Service) UpdateSourcePriority(sources []string) error {
+	updateSuccess := true
+	newPriorityMapping := make(map[string]int)
+	for index, source := range sources {
+		if _, exist := service.SourceAdapterManager.SourceMapping[source]; !exist {
+			updateSuccess = false
+			break
+		}
+		newPriorityMapping[source] = index
+	}
+	if updateSuccess {
+		service.SourceAdapterManager.PriorityMapping = newPriorityMapping
+		for domain, priority := range service.SourceAdapterManager.PriorityMapping {
+			if priority == 0 {
+				service.SourceAdapterManager.CurrentSource = service.SourceAdapterManager.SourceMapping[domain]
+				break
+			}
+		}
+		return nil
+	}
+	return &model.Err{
+		Code:    constant.InvalidRequest,
+		Message: "Invalid source",
+	}
+}
+
+func (service *Service) RegisterSourceAdapter(domain string) error {
+	return nil
 }
 
 //func (service *Service) Download(request *model.DownloadChapterRequest) (*model.DownloadChapterResponse, error) {

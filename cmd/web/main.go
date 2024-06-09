@@ -2,9 +2,8 @@ package main
 
 import (
 	"go.uber.org/zap"
-	"novel_crawler/router"
-
 	"novel_crawler/config"
+	"novel_crawler/router"
 )
 
 func main() {
