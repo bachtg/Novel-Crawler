@@ -52,8 +52,9 @@ type GetNovelsResponse struct {
 }
 
 type GetDetailChapterRequest struct {
-	NovelId   string
-	ChapterId string
+	NovelId      string
+	ChapterId    string
+	SourceDomain string
 }
 
 type GetDetailChapterResponse struct {
@@ -71,4 +72,14 @@ type GetDetailNovelRequest struct {
 type GetDetailNovelResponse struct {
 	Novel   *Novel
 	NumPage int
+}
+
+type DownloadChapterRequest struct {
+	NovelId   string `form:"novel_id" json:"novel_id" binding:"required"`
+	ChapterId string `form:"chapter_id" json:"chapter_id" binding:"required"`
+}
+
+type DownloadChapterResponse struct {
+	Filename  string
+	BytesData []byte
 }

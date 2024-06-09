@@ -1,7 +1,6 @@
 package business
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"novel_crawler/constant"
@@ -19,9 +18,9 @@ func NewHandler(service *Service) *Handler {
 func (handler *Handler) GetAllGenres(ctx *gin.Context) {
 	genres, err := handler.Service.GetAllGenres()
 	if err != nil {
-		fmt.Println()
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": err.Error(),
+			"code":    err.(*model.Err).Code,
+			"message": err.Error(),
 		})
 		ctx.Abort()
 	}
@@ -45,7 +44,8 @@ func (handler *Handler) GetDetailNovel(ctx *gin.Context) {
 	getDetailNovelResponse, err := handler.Service.GetDetailNovel(request)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": err.Error(),
+			"code":    err.(*model.Err).Code,
+			"message": err.Error(),
 		})
 		ctx.Abort()
 	}
@@ -72,7 +72,8 @@ func (handler *Handler) GetNovels(ctx *gin.Context) {
 
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": err.Error(),
+			"code":    err.(*model.Err).Code,
+			"message": err.Error(),
 		})
 		ctx.Abort()
 	}
@@ -91,10 +92,19 @@ func (handler *Handler) GetDetailChapter(ctx *gin.Context) {
 		ChapterId: ctx.Param("chapter_id"),
 	}
 
+	body := struct {
+		Domain string `json:"domain"`
+	}{}
+	_ = ctx.ShouldBindJSON(&body)
+
+	request.SourceDomain = body.Domain
+
 	getDetailChapterResponse, err := handler.Service.GetDetailChapter(request)
+
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": err.Error(),
+			"code":    err.(*model.Err).Code,
+			"message": err.Error(),
 		})
 		ctx.Abort()
 	}
@@ -108,3 +118,27 @@ func (handler *Handler) GetDetailChapter(ctx *gin.Context) {
 		},
 	})
 }
+
+//func (handler *Handler) Download(ctx *gin.Context) {
+//	downloadChapterRequest := &model.DownloadChapterRequest{}
+//	if err := ctx.ShouldBind(&downloadChapterRequest); err != nil {
+//		ctx.JSON(http.StatusOK, gin.H{
+//			"code":    constant.InvalidRequest,
+//			"message": err.Error(),
+//		})
+//		ctx.Abort()
+//	}
+//
+//	downloadChapterResponse, err := handler.Service.Download(downloadChapterRequest)
+//
+//	if err != nil {
+//		ctx.JSON(http.StatusOK, gin.H{
+//			"code":    err.(*model.Err).Code,
+//			"message": err.Error(),
+//		})
+//		ctx.Abort()
+//	}
+//	filename := fmt.Sprintf("%s.%s", downloadChapterResponse.Filename, "pdf")
+//	ctx.Header("Content-Disposition", "attachment; filename="+filename)
+//	ctx.Data(http.StatusOK, "application/pdf", downloadChapterResponse.BytesData)
+//}

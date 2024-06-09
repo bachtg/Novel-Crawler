@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"novel_crawler/constant"
-	"novel_crawler/util"
 	"novel_crawler/internal/model"
+	"novel_crawler/util"
 	"regexp"
 	"strconv"
 	"strings"
@@ -36,6 +36,10 @@ func checkExist(url string, listGenre []*model.Genre) (bool, string) {
 		}
 	}
 	return false, id
+}
+
+func (tangThuVienAdapter *TangThuVienAdapter) GetDomain() string {
+	return "truyen.tangthuvien.vn"
 }
 
 // Complete
@@ -95,12 +99,12 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.Ge
 			Name: authorName,
 		})
 		novels = append(novels, &model.Novel{
-			Id:            subTitle,
-			Title:         title,
-			CoverImage:    image,
-			Author:        authors,
+			Id:         subTitle,
+			Title:      title,
+			CoverImage: image,
+			Author:     authors,
 			LatestChapter: &model.Chapter{
-				Id: chapterNumberStr,
+				Id:    chapterNumberStr,
 				Title: "",
 			},
 		})
@@ -118,19 +122,19 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.Ge
 	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/tong-hop?ctg=" + totalGenre[request.GenreId])
 	if err != nil {
 		return &model.GetNovelsResponse{
-			Novels:  nil,
-            NumPage: 0,
-		}, &model.Err{
-			Code:    constant.InternalError,
-			Message: err.Error(),
-		}
+				Novels:  nil,
+				NumPage: 0,
+			}, &model.Err{
+				Code:    constant.InternalError,
+				Message: err.Error(),
+			}
 	}
 
 	tangThuVienAdapter.collector.Wait()
 
 	return &model.GetNovelsResponse{
 		Novels:  novels,
-        NumPage: numPage,
+		NumPage: numPage,
 	}, nil
 }
 
@@ -184,19 +188,19 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByCategory(request *model
 	err := tangThuVienAdapter.collector.Visit(url)
 	if err != nil {
 		return &model.GetNovelsResponse{
-			Novels:  nil,
-            NumPage: 0,
-		}, &model.Err{
-			Code:    constant.InternalError,
-			Message: err.Error(),
-		}
+				Novels:  nil,
+				NumPage: 0,
+			}, &model.Err{
+				Code:    constant.InternalError,
+				Message: err.Error(),
+			}
 	}
 
 	tangThuVienAdapter.collector.Wait()
 
 	return &model.GetNovelsResponse{
 		Novels:  novels,
-        NumPage: numPage,
+		NumPage: numPage,
 	}, nil
 }
 
@@ -240,32 +244,32 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 		story_id = e.ChildAttr("input[name=story_id]", "value")
 
 		res = &model.Novel{
-			Id:            request.NovelId,
-			Title:         name,
-			CoverImage:    image,
-			Rate:          float32(rateFloat),
-			Chapters:      nil,
-			Author:        authors,
-			Genre:         genres,
-			Description:   intro,
+			Id:          request.NovelId,
+			Title:       name,
+			CoverImage:  image,
+			Rate:        float32(rateFloat),
+			Chapters:    nil,
+			Author:      authors,
+			Genre:       genres,
+			Description: intro,
 			LatestChapter: &model.Chapter{
-				Id:   "",
-                Title: "Chương " + strconv.Itoa(chapterNumber),
+				Id:      "",
+				Title:   "Chương " + strconv.Itoa(chapterNumber),
 				Content: "",
 			},
-			Status:        "success",
+			Status: "success",
 		}
 	})
 
 	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/doc-truyen/" + request.NovelId)
 	if err != nil {
 		return &model.GetDetailNovelResponse{
-			Novel:   nil,
-			NumPage: 0,
-		}, &model.Err{
-			Code:    constant.InternalError,
-			Message: err.Error(),
-		}
+				Novel:   nil,
+				NumPage: 0,
+			}, &model.Err{
+				Code:    constant.InternalError,
+				Message: err.Error(),
+			}
 	}
 
 	tangThuVienAdapter.collector.Wait()
@@ -274,10 +278,10 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 	res.Chapters = chapters
 
 	return &model.GetDetailNovelResponse{
-		Novel:   res,
-		NumPage: 1,
-	},
-	nil
+			Novel:   res,
+			NumPage: 1,
+		},
+		nil
 }
 
 func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByAuthor(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
@@ -323,14 +327,14 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByAuthor(request *model.G
 
 	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/tac-gia?author=" + request.AuthorId + "&page=" + request.Page)
 	if err != nil {
-		
+
 		return &model.GetNovelsResponse{
-			Novels:  nil,
-			NumPage: 0,
-		}, &model.Err{
-			Code:    constant.InternalError,
-			Message: err.Error(),
-		}
+				Novels:  nil,
+				NumPage: 0,
+			}, &model.Err{
+				Code:    constant.InternalError,
+				Message: err.Error(),
+			}
 	}
 
 	tangThuVienAdapter.collector.Wait()
@@ -457,23 +461,21 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByKeyword(request *model.
 		numPage = max(numPage, activePage)
 	})
 
-	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/ket-qua-tim-kiem?term="+request.Keyword+"&page="+request.Page)
+	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/ket-qua-tim-kiem?term=" + request.Keyword + "&page=" + request.Page)
 	if err != nil {
 		return &model.GetNovelsResponse{
-			Novels:  nil,
-            NumPage: 0,
-		}, &model.Err{
-			Code:    constant.InternalError,
-			Message: err.Error(),
-		}
+				Novels:  nil,
+				NumPage: 0,
+			}, &model.Err{
+				Code:    constant.InternalError,
+				Message: err.Error(),
+			}
 	}
 
 	tangThuVienAdapter.collector.Wait()
 
 	return &model.GetNovelsResponse{
 		Novels:  novels,
-        NumPage: numPage,
+		NumPage: numPage,
 	}, nil
 }
-
-

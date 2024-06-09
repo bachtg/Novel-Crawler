@@ -1,6 +1,9 @@
 package repository
 
-import "novel_crawler/internal/model"
+import (
+	"novel_crawler/constant"
+	"novel_crawler/internal/model"
+)
 
 type SourceAdapter interface {
 	GetNovelsByGenre(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
@@ -13,4 +16,36 @@ type SourceAdapter interface {
 	GetDetailChapter(request *model.GetDetailChapterRequest) (*model.GetDetailChapterResponse, error)
 
 	GetAllGenres() ([]*model.Genre, error)
+
+	GetDomain() string
+}
+
+type SourceAdapterManager struct {
+	CurrentSource *SourceAdapter
+	SourceMapping map[string]*SourceAdapter
+}
+
+func (sourceAdapterManager *SourceAdapterManager) AddNewSource(sources ...*SourceAdapter) error {
+
+	if sourceAdapterManager.SourceMapping == nil {
+		sourceAdapterManager.SourceMapping = make(map[string]*SourceAdapter)
+	}
+
+	if len(sources) != 0 && sourceAdapterManager.CurrentSource == nil {
+		sourceAdapterManager.CurrentSource = sources[0]
+	}
+
+	for _, source := range sources {
+		sourceDomain := (*source).GetDomain()
+		sourceAdapterManager.SourceMapping[sourceDomain] = source
+	}
+
+	if sourceAdapterManager.CurrentSource != nil {
+		return nil
+	}
+
+	return &model.Err{
+		Code:    constant.NoSourceFound,
+		Message: "No source found",
+	}
 }

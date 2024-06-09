@@ -25,6 +25,10 @@ func NewTruyenFullAdapter() SourceAdapter {
 	return &TruyenFullAdapter{collector: collector}
 }
 
+func (truyenFullAdapter *TruyenFullAdapter) GetDomain() string {
+	return "truyenfull.vn"
+}
+
 func (truyenFullAdapter *TruyenFullAdapter) GetAllGenres() ([]*model.Genre, error) {
 	var genres []*model.Genre
 	url := config.Cfg.TruyenFullBaseUrl
