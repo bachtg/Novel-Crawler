@@ -4,7 +4,6 @@ import (
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/internal/repository"
-	"fmt"
 )
 
 type Service struct {
@@ -98,17 +97,32 @@ func (service *Service) Download(request *model.DownloadChapterRequest) (*model.
 	getDetailChapterResponse, err := service.GetDetailChapter(&model.GetDetailChapterRequest{
 		ChapterId: request.ChapterId,
 		NovelId:   request.NovelId,
+		SourceDomain: request.Domain,
 	})
+
 	if err != nil {
 		return nil, &model.Err{
             Code:    constant.InternalError,
             Message: err.Error(),
         }
 	}
+
+
+	if getDetailChapterResponse.CurrentChapter == nil {
+		return nil, &model.Err{
+            Code:    constant.InternalError,
+            Message: "Not found",
+        }
+	}
+
+	if getDetailChapterResponse.CurrentChapter.Content == "" {
+		return nil, &model.Err{
+            Code:    constant.InternalError,
+            Message: "Not found",
+        }
+	}
+
 	var exporter repository.Exporter
-	fmt.Println(request.ChapterId)
-	fmt.Println(request.NovelId)
-	fmt.Println(request.Type)
 
 	if (request.Type == "pdf") {
 		exporter = repository.NewPDFExporter()

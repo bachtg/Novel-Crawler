@@ -199,7 +199,6 @@ func (handler *Handler) Download(ctx *gin.Context) {
 		ctx.Abort()
 		return
 	}
-
 	downloadChapterResponse, err := handler.Service.Download(downloadChapterRequest)
 
 	if err != nil {
@@ -208,7 +207,9 @@ func (handler *Handler) Download(ctx *gin.Context) {
 			"message": err.Error(),
 		})
 		ctx.Abort()
+		return
 	}
+
 	filename := fmt.Sprintf("%s.%s", downloadChapterResponse.Filename, downloadChapterRequest.Type)
 	fmt.Println(filename)
 	ctx.Header("Content-Disposition", "attachment; filename="+filename)

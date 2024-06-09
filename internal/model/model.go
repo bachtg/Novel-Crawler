@@ -82,6 +82,7 @@ type DownloadChapterRequest struct {
 	NovelId   string `form:"novel_id" json:"novel_id" binding:"required"`
 	ChapterId string `form:"chapter_id" json:"chapter_id" binding:"required"`
 	Type string `form:"type" json:"type" binding:"required"`
+	Domain string `form:"domain" json:"domain" binding:"required"`
 }
 
 type DownloadChapterResponse struct {

@@ -13,11 +13,11 @@ func Start() {
 
 	sourceAdapterManager := repository.SourceAdapterManager{}
 
-	//truyenFullAdapter := repository.NewTruyenFullAdapter()
-	//tangThuVienAdapter := repository.NewTangThuVienAdapter()
+	truyenFullAdapter := repository.NewTruyenFullAdapter()
+	tangThuVienAdapter := repository.NewTangThuVienAdapter()
 	netTruyenAdapter := repository.NewNetTruyenAdapter()
 
-	err := sourceAdapterManager.AddNewSource(&netTruyenAdapter)
+	err := sourceAdapterManager.AddNewSource(&truyenFullAdapter, &tangThuVienAdapter, &netTruyenAdapter)
 	if err != nil {
 		config.Cfg.Logger.Error(err.Error())
 		panic(err)
