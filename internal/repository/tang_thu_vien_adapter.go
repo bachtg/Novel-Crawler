@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"github.com/gocolly/colly/v2"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
@@ -9,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 type TangThuVienAdapter struct {
@@ -206,7 +206,6 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByCategory(request *model
 
 // Complete
 func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetDetailNovelRequest) (*model.GetDetailNovelResponse, error) {
-	fmt.Println("GetDetailNovel")
 	res := &model.Novel{}
 	var story_id string
 	tangThuVienAdapter.collector.OnHTML(".book-detail-wrap", func(e *colly.HTMLElement) {
@@ -261,6 +260,13 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 		}
 	})
 
+	numPage := 1
+	tangThuVienAdapter.collector.OnHTML(".list-chapter .pagination", func(e *colly.HTMLElement) {
+		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
+			numPage = max(numPage, util.GetNumPage(child.Text, ""))
+		})
+	})
+
 	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/doc-truyen/" + request.NovelId)
 	if err != nil {
 		return &model.GetDetailNovelResponse{
@@ -269,7 +275,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 			}, &model.Err{
 				Code:    constant.InternalError,
 				Message: err.Error(),
-			}
+		}	
 	}
 
 	tangThuVienAdapter.collector.Wait()
@@ -279,7 +285,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 
 	return &model.GetDetailNovelResponse{
 			Novel:   res,
-			NumPage: 1,
+			NumPage: numPage,
 		},
 		nil
 }

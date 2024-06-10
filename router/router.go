@@ -37,5 +37,5 @@ func Start() {
 	router.POST("/downloads", novelHandler.Download)
 
 	config.Cfg.Logger.Info("Server's running on", zap.String("address", config.Cfg.Address))
-	_ = router.Run(config.Cfg.Address)
+	_ = router.Run()
 }
