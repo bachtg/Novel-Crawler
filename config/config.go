@@ -12,6 +12,7 @@ type Config struct {
 	Address           string `yaml:"address"`
 	TruyenFullBaseUrl string `yaml:"truyen_full_base_url"`
 	NetTruyenBaseUrl string `yaml:"net_truyen_base_url"`
+	TangThuVienBaseUrl string `yaml:"tang_thu_vien_base_url"`
 }
 
 var Cfg Config

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gocolly/colly/v2"
 	"novel_crawler/constant"
+	"novel_crawler/config"
 	"novel_crawler/internal/model"
 	"novel_crawler/util"
 	"regexp"
@@ -58,29 +59,23 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetAllGenres() ([]*model.Genre, er
 			}
 		}
 	})
-	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/")
+	err := tangThuVienAdapter.collector.Visit(config.Cfg.TangThuVienBaseUrl)
 	if err != nil {
 		return nil, &model.Err{
 			Code:    constant.InternalError,
-			Message: "Cannot visit url: " + "https://truyen.tangthuvien.vn/",
+			Message: "Cannot visit url: " + config.Cfg.TangThuVienBaseUrl,
 		}
 	}
 	tangThuVienAdapter.collector.Wait()
 	return genres, nil
 }
 
-// Complete
-func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
+func (tangThuVienAdapter *TangThuVienAdapter) GetNovels(url string) (*model.GetNovelsResponse, error) {
 	var (
 		novels  []*model.Novel
-		numPage int
+		numPage = 1
 	)
-	totalGenre = make(map[string]string)
-	// Set map
-	geners, _ := tangThuVienAdapter.GetAllGenres()
-	for key, val := range geners {
-		totalGenre[val.Id] = strconv.Itoa(key + 1)
-	}
+
 	tangThuVienAdapter.collector.OnHTML(".book-img-text li", func(e *colly.HTMLElement) {
 		title := e.ChildText(".book-mid-info h4 a")
 		titleHref := e.ChildAttr(".book-mid-info h4 a", "href")
@@ -104,8 +99,8 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.Ge
 			CoverImage: image,
 			Author:     authors,
 			LatestChapter: &model.Chapter{
-				Id:    chapterNumberStr,
-				Title: "",
+				Id:    "chuong-" + chapterNumberStr,
+				Title: "Chương " + chapterNumberStr,
 			},
 		})
 	})
@@ -118,72 +113,6 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.Ge
 		activePage, _ := strconv.Atoi(strings.Split(e.ChildText(".active"), " ")[0])
 		numPage = max(numPage, activePage)
 	})
-
-	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/tong-hop?ctg=" + totalGenre[request.GenreId])
-	if err != nil {
-		return &model.GetNovelsResponse{
-				Novels:  nil,
-				NumPage: 0,
-			}, &model.Err{
-				Code:    constant.InternalError,
-				Message: err.Error(),
-			}
-	}
-
-	tangThuVienAdapter.collector.Wait()
-
-	return &model.GetNovelsResponse{
-		Novels:  novels,
-		NumPage: numPage,
-	}, nil
-}
-
-func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByCategory(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	var (
-		novels  []*model.Novel
-		numPage int
-	)
-
-	tangThuVienAdapter.collector.OnHTML(".book-img-text li", func(e *colly.HTMLElement) {
-		title := e.ChildText(".book-mid-info h4 a")
-		titleHref := e.ChildAttr(".book-mid-info h4 a", "href")
-
-		subs := strings.Split(titleHref, "/")
-		subTitle := subs[len(subs)-1]
-		image := e.ChildAttr("img", "src")
-
-		authorName := e.ChildText(".book-mid-info .author .name")
-		authorHref := e.ChildAttrs(".book-mid-info .author .name", "href")[0]
-		authorId := strings.Split(authorHref, "author=")[1]
-		var authors []*model.Author
-
-		authors = append(authors, &model.Author{
-			Id:   authorId,
-			Name: authorName,
-		})
-		novels = append(novels, &model.Novel{
-			Id:         subTitle,
-			Title:      title,
-			CoverImage: image,
-			Author:     authors,
-		})
-	})
-
-	// get number of page
-	tangThuVienAdapter.collector.OnHTML(".pagination", func(e *colly.HTMLElement) {
-		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
-			num, _ := strconv.Atoi(child.Text)
-			numPage = max(numPage, num)
-		})
-		activePage, _ := strconv.Atoi(strings.Split(e.ChildText(".active"), " ")[0])
-		numPage = max(numPage, activePage)
-	})
-	var url string
-	if request.CategoryId == "truyen-hot" {
-		url = "https://truyen.tangthuvien.vn/tong-hop?rank=nm&page=" + request.Page
-	} else {
-		url = "https://truyen.tangthuvien.vn/tong-hop?fns=ht&page=" + request.Page
-	}
 
 	err := tangThuVienAdapter.collector.Visit(url)
 	if err != nil {
@@ -205,12 +134,49 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByCategory(request *model
 }
 
 // Complete
+func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
+
+	totalGenre = make(map[string]string)
+	// Set map
+	geners, _ := tangThuVienAdapter.GetAllGenres()
+	for key, val := range geners {
+		totalGenre[val.Id] = strconv.Itoa(key + 1)
+	}
+
+	url := config.Cfg.TangThuVienBaseUrl+"/tong-hop?ctg=" + totalGenre[request.GenreId]
+	fmt.Println("--", url)
+	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
+	if err != nil {
+		return nil, err
+	}
+	return getNovelsResponse, nil
+}
+
+func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByCategory(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
+	var url string
+
+	if request.CategoryId == "truyen-hot" {
+		url = config.Cfg.TangThuVienBaseUrl+"/tong-hop?rank=nm&page=" + request.Page
+	} else {
+		url = config.Cfg.TangThuVienBaseUrl+"/tong-hop?fns=ht&page=" + request.Page
+	}
+	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return getNovelsResponse, nil
+}
+
+// Complete
 func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetDetailNovelRequest) (*model.GetDetailNovelResponse, error) {
 	res := &model.Novel{}
 	var story_id string
 	tangThuVienAdapter.collector.OnHTML(".book-detail-wrap", func(e *colly.HTMLElement) {
 		name := e.ChildText(".book-info h1")
 		image := e.ChildAttr(".book-img img", "src")
+		
 		var authors []*model.Author
 		authorName := e.ChildText(".tag a:first-child")
 		authorHref := e.ChildAttrs(".tag a:first-child", "href")[0]
@@ -219,11 +185,15 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 			Name: authorName,
 			Id:   authorId,
 		})
+
+		status := e.ChildText(".tag span")
+		
 		temp := e.ChildText(".nav-wrap ul li:nth-child(2)")
 		intro := e.ChildText(".intro")
 		re := regexp.MustCompile(`\d+`)
 		matches := re.FindStringSubmatch(temp)
 		chapterNumber, err := strconv.Atoi(matches[0])
+		
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -256,7 +226,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 				Title:   "Chương " + strconv.Itoa(chapterNumber),
 				Content: "",
 			},
-			Status: "success",
+			Status: status,
 		}
 	})
 
@@ -267,7 +237,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 		})
 	})
 
-	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/doc-truyen/" + request.NovelId)
+	err := tangThuVienAdapter.collector.Visit(config.Cfg.TangThuVienBaseUrl+"/doc-truyen/" + request.NovelId)
 	if err != nil {
 		return &model.GetDetailNovelResponse{
 				Novel:   nil,
@@ -291,64 +261,15 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 }
 
 func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByAuthor(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	var (
-		novels  []*model.Novel
-		numPage int
-	)
+	url := config.Cfg.TangThuVienBaseUrl+"/tac-gia?author=" + request.AuthorId + "&page=" + request.Page
 
-	tangThuVienAdapter.collector.OnHTML(".book-img-text li", func(e *colly.HTMLElement) {
-		title := e.ChildText(".book-mid-info h4 a")
-		titleHref := e.ChildAttr(".book-mid-info h4 a", "href")
+	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
 
-		subs := strings.Split(titleHref, "/")
-		subTitle := subs[len(subs)-1]
-		image := e.ChildAttr("img", "src")
-
-		authorName := e.ChildText(".book-mid-info .author .name")
-		authorHref := e.ChildAttrs(".book-mid-info .author .name", "href")[0]
-		authorId := strings.Split(authorHref, "author=")[1]
-		var authors []*model.Author
-
-		authors = append(authors, &model.Author{
-			Id:   authorId,
-			Name: authorName,
-		})
-		novels = append(novels, &model.Novel{
-			Id:         subTitle,
-			Title:      title,
-			CoverImage: image,
-			Author:     authors,
-		})
-	})
-
-	// get number of page
-	tangThuVienAdapter.collector.OnHTML(".pagination", func(e *colly.HTMLElement) {
-		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
-			num, _ := strconv.Atoi(child.Text)
-			numPage = max(numPage, num)
-		})
-		activePage, _ := strconv.Atoi(strings.Split(e.ChildText(".active"), " ")[0])
-		numPage = max(numPage, activePage)
-	})
-
-	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/tac-gia?author=" + request.AuthorId + "&page=" + request.Page)
 	if err != nil {
-
-		return &model.GetNovelsResponse{
-				Novels:  nil,
-				NumPage: 0,
-			}, &model.Err{
-				Code:    constant.InternalError,
-				Message: err.Error(),
-			}
+		return nil, err
 	}
 
-	tangThuVienAdapter.collector.Wait()
-
-	return &model.GetNovelsResponse{
-		Novels:  novels,
-		NumPage: numPage,
-	}, nil
+	return getNovelsResponse, nil
 }
 
 func (tangThuVienAdapter *TangThuVienAdapter) GetListChapters(story_id string, page string, limit string) []*model.Chapter {
@@ -369,7 +290,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetListChapters(story_id string, p
 
 	})
 	pageUrl, _ := strconv.Atoi(page)
-	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/doc-truyen/page/" + story_id + "?page=" + strconv.Itoa(pageUrl-1) + "&limit=" + limit + "&web=1")
+	err := tangThuVienAdapter.collector.Visit(config.Cfg.TangThuVienBaseUrl+"/doc-truyen/page/" + story_id + "?page=" + strconv.Itoa(pageUrl-1) + "&limit=" + limit + "&web=1")
 	if err != nil {
 		return nil
 	}
@@ -381,7 +302,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetListChapters(story_id string, p
 func (tangThuVienAdapter *TangThuVienAdapter) GetDetailChapter(request *model.GetDetailChapterRequest) (*model.GetDetailChapterResponse, error) {
 	var (
 		detailChapterResponse = &model.GetDetailChapterResponse{}
-		url                   = "https://truyen.tangthuvien.vn/doc-truyen/" + request.NovelId + "/" + request.ChapterId
+		url                   = config.Cfg.TangThuVienBaseUrl+"/doc-truyen/" + request.NovelId + "/" + request.ChapterId
 	)
 
 	tangThuVienAdapter.collector.OnHTML(".truyen-title a", func(e *colly.HTMLElement) {
@@ -441,61 +362,14 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailChapter(request *model.Ge
 }
 
 func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByKeyword(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	var (
-		novels  []*model.Novel
-		numPage int
-	)
 
-	tangThuVienAdapter.collector.OnHTML(".book-img-text li", func(e *colly.HTMLElement) {
-		title := e.ChildText(".book-mid-info h4 a")
-		titleHref := e.ChildAttr(".book-mid-info h4 a", "href")
+	url := config.Cfg.TangThuVienBaseUrl+"/ket-qua-tim-kiem?term=" + request.Keyword + "&page=" + request.Page
 
-		subs := strings.Split(titleHref, "/")
-		subTitle := subs[len(subs)-1]
-		image := e.ChildAttr("img", "src")
+	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
 
-		authorName := e.ChildText(".book-mid-info .author .name")
-		authorHref := e.ChildAttrs(".book-mid-info .author .name", "href")[0]
-		authorId := strings.Split(authorHref, "author=")[1]
-		var authors []*model.Author
-
-		authors = append(authors, &model.Author{
-			Id:   authorId,
-			Name: authorName,
-		})
-		novels = append(novels, &model.Novel{
-			Id:         subTitle,
-			Title:      title,
-			CoverImage: image,
-			Author:     authors,
-		})
-	})
-
-	// get number of page
-	tangThuVienAdapter.collector.OnHTML(".pagination", func(e *colly.HTMLElement) {
-		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
-			num, _ := strconv.Atoi(child.Text)
-			numPage = max(numPage, num)
-		})
-		activePage, _ := strconv.Atoi(strings.Split(e.ChildText(".active"), " ")[0])
-		numPage = max(numPage, activePage)
-	})
-
-	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/ket-qua-tim-kiem?term=" + request.Keyword + "&page=" + request.Page)
 	if err != nil {
-		return &model.GetNovelsResponse{
-				Novels:  nil,
-				NumPage: 0,
-			}, &model.Err{
-				Code:    constant.InternalError,
-				Message: err.Error(),
-			}
+		return nil, err
 	}
 
-	tangThuVienAdapter.collector.Wait()
-
-	return &model.GetNovelsResponse{
-		Novels:  novels,
-		NumPage: numPage,
-	}, nil
+	return getNovelsResponse, nil
 }

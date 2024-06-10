@@ -1,3 +1,4 @@
 address: "localhost:8080"
 truyen_full_base_url: "https://truyenfull.vn"
 net_truyen_base_url: "https://dtruyen.com"
+tang_thu_vien_base_url: "https://truyen.tangthuvien.vn"
