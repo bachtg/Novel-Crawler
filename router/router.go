@@ -17,7 +17,7 @@ func Start() {
 	tangThuVienAdapter := repository.NewTangThuVienAdapter()
 	netTruyenAdapter := repository.NewNetTruyenAdapter()
 
-	err := sourceAdapterManager.AddNewSource(&truyenFullAdapter, &tangThuVienAdapter, &netTruyenAdapter)
+	err := sourceAdapterManager.AddNewSource(&tangThuVienAdapter, &truyenFullAdapter, &netTruyenAdapter)
 	if err != nil {
 		config.Cfg.Logger.Error(err.Error())
 		panic(err)

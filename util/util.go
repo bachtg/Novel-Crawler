@@ -2,6 +2,7 @@ package util
 
 import (
 	"strings"
+	"strconv"
 )
 
 func GetId(url string) string {
@@ -32,3 +33,25 @@ func GetNumPage(url string, prefixes ...string) int {
 	}
 	return 1
 }
+
+func FindPrevAndNextChapters(current string, chapterNew string, chapterLast string) (string, string) {
+
+	temps := strings.Split(current, "chuong-")
+	temp := temps[len(temps)-1]
+
+	num, _ := strconv.Atoi(temp)
+
+	if current == chapterLast || num == 1 {
+		return current, "chuong-" + strconv.Itoa(num+1)
+	}
+
+	if current == chapterNew {
+		return "chuong-" + strconv.Itoa(num-1), current
+	}
+	prev := strconv.Itoa(num - 1)
+	next := strconv.Itoa(num + 1)
+	prev = "chuong-" + prev
+	next = "chuong-" + next
+	return prev, next
+}
+

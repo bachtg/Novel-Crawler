@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/gocolly/colly/v2"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
@@ -8,7 +9,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 type TangThuVienAdapter struct {
@@ -275,12 +275,12 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 			}, &model.Err{
 				Code:    constant.InternalError,
 				Message: err.Error(),
-		}	
+			}
 	}
 
 	tangThuVienAdapter.collector.Wait()
 
-	chapters := tangThuVienAdapter.GetListChapters(story_id, request.Page)
+	chapters := tangThuVienAdapter.GetListChapters(story_id, request.Page, "60")
 	res.Chapters = chapters
 
 	return &model.GetDetailNovelResponse{
@@ -351,7 +351,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByAuthor(request *model.G
 	}, nil
 }
 
-func (tangThuVienAdapter *TangThuVienAdapter) GetListChapters(story_id string, page string) []*model.Chapter {
+func (tangThuVienAdapter *TangThuVienAdapter) GetListChapters(story_id string, page string, limit string) []*model.Chapter {
 	var listChapters []*model.Chapter
 	tangThuVienAdapter.collector.OnHTML(".cf", func(e *colly.HTMLElement) {
 
@@ -369,7 +369,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetListChapters(story_id string, p
 
 	})
 	pageUrl, _ := strconv.Atoi(page)
-	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/doc-truyen/page/" + story_id + "?page=" + strconv.Itoa(pageUrl-1) + "&limit=60&web=1")
+	err := tangThuVienAdapter.collector.Visit("https://truyen.tangthuvien.vn/doc-truyen/page/" + story_id + "?page=" + strconv.Itoa(pageUrl-1) + "&limit=" + limit + "&web=1")
 	if err != nil {
 		return nil
 	}
@@ -406,12 +406,11 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailChapter(request *model.Ge
 		detailChapterResponse.CurrentChapter.Content, _ = e.DOM.Html()
 	})
 
-	detailChapterResponse.NextChapter = &model.Chapter{
-		Id: "",
-	}
-	detailChapterResponse.PreviousChapter = &model.Chapter{
-		Id: "",
-	}
+	var story_id string
+	tangThuVienAdapter.collector.OnHTML("input[name=story_id]", func(e *colly.HTMLElement) {
+		story_id = e.Attr("value")
+		fmt.Println("storyid:", story_id)
+	})
 
 	err := tangThuVienAdapter.collector.Visit(url)
 	if err != nil {
@@ -422,6 +421,21 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailChapter(request *model.Ge
 	}
 
 	tangThuVienAdapter.collector.Wait()
+
+	listChapter := tangThuVienAdapter.GetListChapters(story_id, "1", "100000")
+
+	detailChapterResponse.Novel.Chapters = listChapter
+	chapterLast := listChapter[0]
+	chapterNew := listChapter[len(listChapter)-1]
+
+	prev, next := util.FindPrevAndNextChapters(request.ChapterId, chapterNew.Id, chapterLast.Id)
+	fmt.Println(prev, next)
+	detailChapterResponse.NextChapter = &model.Chapter{
+		Id: prev,
+	}
+	detailChapterResponse.PreviousChapter = &model.Chapter{
+		Id: next,
+	}
 
 	return detailChapterResponse, nil
 }
