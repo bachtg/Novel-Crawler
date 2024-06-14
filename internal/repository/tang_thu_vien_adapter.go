@@ -7,9 +7,9 @@ import (
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/util"
-	"regexp"
-	"strconv"
 	"strings"
+	"strconv"
+	"regexp"
 )
 
 type TangThuVienAdapter struct {
@@ -144,7 +144,6 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.Ge
 	}
 
 	url := config.Cfg.TangThuVienBaseUrl + "/tong-hop?ctg=" + totalGenre[request.GenreId]
-
 	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err

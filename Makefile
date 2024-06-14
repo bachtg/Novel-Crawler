@@ -1,4 +1,8 @@
 run:
 	go run cmd/web/main.go
 
-.PHONY: run
+update:
+	go mod tidy
+	go mod vendor
+
+.PHONY: run, update

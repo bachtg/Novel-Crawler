@@ -1,11 +1,13 @@
 package business
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
-	"fmt"
 )
 
 type Handler struct {
@@ -213,7 +215,6 @@ func (handler *Handler) Download(ctx *gin.Context) {
 	}
 
 	filename := fmt.Sprintf("%s.%s", downloadChapterResponse.Filename, downloadChapterRequest.Type)
-	fmt.Println(filename)
 	ctx.Header("Content-Disposition", "attachment; filename="+filename)
 	ctx.Data(http.StatusOK, "application/"+downloadChapterRequest.Type, downloadChapterResponse.BytesData)
 }
