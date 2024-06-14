@@ -1,8 +1,10 @@
 package router
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
 	"novel_crawler/config"
 	"novel_crawler/internal/business"
 	"novel_crawler/internal/repository"
@@ -10,6 +12,10 @@ import (
 
 func Start() {
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5174, http://localhost:5173"},
+		AllowCredentials: true,
+	}))
 
 	sourceAdapterManager := repository.SourceAdapterManager{}
 
