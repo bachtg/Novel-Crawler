@@ -13,7 +13,7 @@ type Exporter interface {
 }
 
 type ExporterManager struct {
-	listExporters []*Exporter
+	ExporterMapping map[string]*Exporter
 }
 
 type PDFExporter struct {
@@ -57,3 +57,8 @@ func (pdfExporter *PDFExporter) Generate(content string) ([]byte, error) {
 
 	return pdfBytes, nil
 }
+
+func (exporterManager *ExporterManager) AddNewExporter(exporter *Exporter) (error) {
+	return nil
+}
+

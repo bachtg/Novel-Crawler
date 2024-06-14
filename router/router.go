@@ -33,7 +33,6 @@ func Start() {
 	router.GET("/sources", novelHandler.GetAllSources)
 	router.POST("/sources/:domain", novelHandler.RegisterSourceAdapter)
 	router.PATCH("/sources", novelHandler.UpdateSourcePriority)
-
 	router.POST("/downloads", novelHandler.Download)
 
 	config.Cfg.Logger.Info("Server's running on", zap.String("address", config.Cfg.Address))

@@ -66,6 +66,8 @@ type GetDetailChapterResponse struct {
 	CurrentChapter  *Chapter
 	NextChapter     *Chapter
 	PreviousChapter *Chapter
+	CurrentSource string
+	Sources []string
 }
 
 type GetDetailNovelRequest struct {

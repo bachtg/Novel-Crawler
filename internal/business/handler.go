@@ -169,6 +169,7 @@ func (handler *Handler) GetDetailChapter(ctx *gin.Context) {
 			"current_chapter":  getDetailChapterResponse.CurrentChapter,
 			"previous_chapter": getDetailChapterResponse.PreviousChapter,
 			"next_chapter":     getDetailChapterResponse.NextChapter,
+			"sources": getDetailChapterResponse.Sources,
 		},
 	})
 }
@@ -199,6 +200,7 @@ func (handler *Handler) Download(ctx *gin.Context) {
 		ctx.Abort()
 		return
 	}
+
 	downloadChapterResponse, err := handler.Service.Download(downloadChapterRequest)
 
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/internal/repository"
+	"sync"
 )
 
 type Service struct {
@@ -52,14 +53,54 @@ func (service *Service) GetDetailNovel(request *model.GetDetailNovelRequest) (*m
 }
 
 func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest) (*model.GetDetailChapterResponse, error) {
-	if request.SourceDomain != "" {
-		source, exists := service.SourceAdapterManager.SourceMapping[request.SourceDomain]
-		if exists {
-			return (*source).GetDetailChapter(request)
-		}
+	sourceNum := len(service.SourceAdapterManager.SourceMapping)
+	var wg sync.WaitGroup
+	wg.Add(sourceNum)
+	resultChan := make(chan *model.GetDetailChapterResponse, sourceNum)
+	var errRes error
+	for key, value := range service.SourceAdapterManager.SourceMapping {
+		go func(key string, value *repository.SourceAdapter) {
+			defer wg.Done()
+			adapter := value
+			resp, err := (*adapter).GetDetailChapter(&model.GetDetailChapterRequest{
+				NovelId: request.NovelId,
+				ChapterId: request.ChapterId,
+				SourceDomain: key,
+			})
+
+			errRes = err
+
+			if err == nil {
+				resp.CurrentSource = key
+				resultChan <- resp
+			}
+		}(key, value)
 	}
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
+
 	source := *service.SourceAdapterManager.CurrentSource
-	return source.GetDetailChapter(request)
+	var sources []string
+	var respone *model.GetDetailChapterResponse
+
+	for result := range resultChan {
+		if result.CurrentChapter.Title != "" {
+            sources = append(sources, result.CurrentSource)
+			if result.CurrentSource == request.SourceDomain {
+				respone = result
+			}
+			if result.CurrentSource == source.GetDomain() {
+				respone = result
+			}
+        }
+	}
+	if(errRes != nil) {
+		return nil, errRes
+	}
+	respone.Sources = sources
+	return respone, errRes
 }
 
 func (service *Service) UpdateSourcePriority(sources []string) error {
@@ -95,36 +136,35 @@ func (service *Service) RegisterSourceAdapter(domain string) error {
 func (service *Service) Download(request *model.DownloadChapterRequest) (*model.DownloadChapterResponse, error) {
 
 	getDetailChapterResponse, err := service.GetDetailChapter(&model.GetDetailChapterRequest{
-		ChapterId: request.ChapterId,
-		NovelId:   request.NovelId,
+		ChapterId:    request.ChapterId,
+		NovelId:      request.NovelId,
 		SourceDomain: request.Domain,
 	})
 
 	if err != nil {
 		return nil, &model.Err{
-            Code:    constant.InternalError,
-            Message: err.Error(),
-        }
+			Code:    constant.InternalError,
+			Message: err.Error(),
+		}
 	}
-
 
 	if getDetailChapterResponse.CurrentChapter == nil {
 		return nil, &model.Err{
-            Code:    constant.InternalError,
-            Message: "Not found",
-        }
+			Code:    constant.InternalError,
+			Message: "Not found",
+		}
 	}
 
 	if getDetailChapterResponse.CurrentChapter.Content == "" {
 		return nil, &model.Err{
-            Code:    constant.InternalError,
-            Message: "Not found",
-        }
+			Code:    constant.InternalError,
+			Message: "Not found",
+		}
 	}
 
 	var exporter repository.Exporter
 
-	if (request.Type == "pdf") {
+	if request.Type == "pdf" {
 		exporter = repository.NewPDFExporter()
 	} else {
 		exporter = repository.NewEpubExporter()
