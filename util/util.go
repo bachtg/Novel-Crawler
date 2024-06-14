@@ -1,8 +1,8 @@
 package util
 
 import (
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func GetId(url string) string {
@@ -54,4 +54,3 @@ func FindPrevAndNextChapters(current string, chapterNew string, chapterLast stri
 	next = "chuong-" + next
 	return prev, next
 }
-

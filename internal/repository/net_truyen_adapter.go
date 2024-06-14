@@ -1,14 +1,16 @@
 package repository
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/gocolly/colly/v2"
+
 	"novel_crawler/config"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/util"
-	"github.com/gocolly/colly/v2"
-	"strconv"
-	"fmt"
-	"strings"
 )
 
 type NetTruyenAdapter struct {
@@ -34,9 +36,9 @@ func (netTruyenAdapter *NetTruyenAdapter) GetAllGenres() ([]*model.Genre, error)
 		id := util.GetId(e.Attr("href"))
 		title := e.Attr("title")
 		genres = append(genres, &model.Genre{
-            Id:   id,
-            Name: title,
-        })
+			Id:   id,
+			Name: title,
+		})
 	})
 	err := netTruyenAdapter.collector.Visit(url)
 	if err != nil {
@@ -56,10 +58,10 @@ func (netTruyenAdapter *NetTruyenAdapter) GetNovels(url string) (*model.GetNovel
 	)
 
 	netTruyenAdapter.collector.OnHTML(".list-stories .story-list", func(e *colly.HTMLElement) {
-        id := util.GetId(e.ChildAttr(".thumb", "href"))
+		id := util.GetId(e.ChildAttr(".thumb", "href"))
 		title := e.ChildAttr(".thumb", "title")
 		var authors []*model.Author
-		authors = append(authors, &model.Author {
+		authors = append(authors, &model.Author{
 			Name: e.ChildText(`[itemprop="author"]`),
 		})
 		coverImage := e.ChildAttr(".thumb > img", "data-layzr")
@@ -68,13 +70,13 @@ func (netTruyenAdapter *NetTruyenAdapter) GetNovels(url string) (*model.GetNovel
 			Title: lastChapter,
 		}
 		novels = append(novels, &model.Novel{
-			Id: id,
-			Title: title,
+			Id:            id,
+			Title:         title,
 			Author:        authors,
 			CoverImage:    coverImage,
 			LatestChapter: latestChapter,
 		})
-    })
+	})
 
 	netTruyenAdapter.collector.OnHTML(".pagination", func(e *colly.HTMLElement) {
 		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
@@ -84,7 +86,7 @@ func (netTruyenAdapter *NetTruyenAdapter) GetNovels(url string) (*model.GetNovel
 		activePage, _ := strconv.Atoi(strings.Split(e.ChildText(".active"), " ")[0])
 		numPage = max(numPage, activePage)
 	})
-	
+
 	err := netTruyenAdapter.collector.Visit(url)
 	if err != nil {
 		return nil, &model.Err{
@@ -112,7 +114,7 @@ func (netTruyenAdapter *NetTruyenAdapter) GetNovelsByGenre(request *model.GetNov
 
 func (netTruyenAdapter *NetTruyenAdapter) GetNovelsByCategory(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
 	var key string
-	
+
 	if request.CategoryId == "hoan-thanh" {
 		key = "truyen-full"
 	} else {
@@ -157,7 +159,6 @@ func (netTruyenAdapter *NetTruyenAdapter) GetDetailNovel(request *model.GetDetai
 		})
 
 		status := e.ChildText(".infos p:nth-of-type(5)")
-
 
 		novel = &model.Novel{
 			Title:       title,
@@ -213,7 +214,7 @@ func (netTruyenAdapter *NetTruyenAdapter) GetDetailChapter(request *model.GetDet
 		currentChapter = &model.Chapter{}
 		prevChapter    = &model.Chapter{}
 		nextChapter    = &model.Chapter{}
-		url = config.Cfg.NetTruyenBaseUrl + "/" + request.NovelId + "/" + request.ChapterId
+		url            = config.Cfg.NetTruyenBaseUrl + "/" + request.NovelId + "/" + request.ChapterId
 	)
 	fmt.Println("url")
 

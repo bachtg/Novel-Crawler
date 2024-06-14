@@ -1,10 +1,12 @@
 package repository
 
 import (
-	"github.com/bmaupin/go-epub"
 	"io/ioutil"
-	"novel_crawler/internal/model"
+
+	"github.com/bmaupin/go-epub"
+
 	"novel_crawler/constant"
+	"novel_crawler/internal/model"
 )
 
 type EPUBExporter struct {

@@ -2,14 +2,16 @@ package repository
 
 import (
 	"fmt"
-	"github.com/gocolly/colly/v2"
-	"novel_crawler/constant"
-	"novel_crawler/config"
-	"novel_crawler/internal/model"
-	"novel_crawler/util"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/gocolly/colly/v2"
+
+	"novel_crawler/config"
+	"novel_crawler/constant"
+	"novel_crawler/internal/model"
+	"novel_crawler/util"
 )
 
 type TangThuVienAdapter struct {
@@ -143,7 +145,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.Ge
 		totalGenre[val.Id] = strconv.Itoa(key + 1)
 	}
 
-	url := config.Cfg.TangThuVienBaseUrl+"/tong-hop?ctg=" + totalGenre[request.GenreId]
+	url := config.Cfg.TangThuVienBaseUrl + "/tong-hop?ctg=" + totalGenre[request.GenreId]
 	fmt.Println("--", url)
 	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
 	if err != nil {
@@ -156,9 +158,9 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByCategory(request *model
 	var url string
 
 	if request.CategoryId == "truyen-hot" {
-		url = config.Cfg.TangThuVienBaseUrl+"/tong-hop?rank=nm&page=" + request.Page
+		url = config.Cfg.TangThuVienBaseUrl + "/tong-hop?rank=nm&page=" + request.Page
 	} else {
-		url = config.Cfg.TangThuVienBaseUrl+"/tong-hop?fns=ht&page=" + request.Page
+		url = config.Cfg.TangThuVienBaseUrl + "/tong-hop?fns=ht&page=" + request.Page
 	}
 	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
 
@@ -176,7 +178,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 	tangThuVienAdapter.collector.OnHTML(".book-detail-wrap", func(e *colly.HTMLElement) {
 		name := e.ChildText(".book-info h1")
 		image := e.ChildAttr(".book-img img", "src")
-		
+
 		var authors []*model.Author
 		authorName := e.ChildText(".tag a:first-child")
 		authorHref := e.ChildAttrs(".tag a:first-child", "href")[0]
@@ -187,13 +189,13 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 		})
 
 		status := e.ChildText(".tag span")
-		
+
 		temp := e.ChildText(".nav-wrap ul li:nth-child(2)")
 		intro := e.ChildText(".intro")
 		re := regexp.MustCompile(`\d+`)
 		matches := re.FindStringSubmatch(temp)
 		chapterNumber, err := strconv.Atoi(matches[0])
-		
+
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -237,7 +239,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 		})
 	})
 
-	err := tangThuVienAdapter.collector.Visit(config.Cfg.TangThuVienBaseUrl+"/doc-truyen/" + request.NovelId)
+	err := tangThuVienAdapter.collector.Visit(config.Cfg.TangThuVienBaseUrl + "/doc-truyen/" + request.NovelId)
 	if err != nil {
 		return &model.GetDetailNovelResponse{
 				Novel:   nil,
@@ -261,7 +263,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 }
 
 func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByAuthor(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	url := config.Cfg.TangThuVienBaseUrl+"/tac-gia?author=" + request.AuthorId + "&page=" + request.Page
+	url := config.Cfg.TangThuVienBaseUrl + "/tac-gia?author=" + request.AuthorId + "&page=" + request.Page
 
 	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
 
@@ -290,7 +292,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetListChapters(story_id string, p
 
 	})
 	pageUrl, _ := strconv.Atoi(page)
-	err := tangThuVienAdapter.collector.Visit(config.Cfg.TangThuVienBaseUrl+"/doc-truyen/page/" + story_id + "?page=" + strconv.Itoa(pageUrl-1) + "&limit=" + limit + "&web=1")
+	err := tangThuVienAdapter.collector.Visit(config.Cfg.TangThuVienBaseUrl + "/doc-truyen/page/" + story_id + "?page=" + strconv.Itoa(pageUrl-1) + "&limit=" + limit + "&web=1")
 	if err != nil {
 		return nil
 	}
@@ -302,7 +304,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetListChapters(story_id string, p
 func (tangThuVienAdapter *TangThuVienAdapter) GetDetailChapter(request *model.GetDetailChapterRequest) (*model.GetDetailChapterResponse, error) {
 	var (
 		detailChapterResponse = &model.GetDetailChapterResponse{}
-		url                   = config.Cfg.TangThuVienBaseUrl+"/doc-truyen/" + request.NovelId + "/" + request.ChapterId
+		url                   = config.Cfg.TangThuVienBaseUrl + "/doc-truyen/" + request.NovelId + "/" + request.ChapterId
 	)
 
 	tangThuVienAdapter.collector.OnHTML(".truyen-title a", func(e *colly.HTMLElement) {
@@ -363,7 +365,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailChapter(request *model.Ge
 
 func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByKeyword(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
 
-	url := config.Cfg.TangThuVienBaseUrl+"/ket-qua-tim-kiem?term=" + request.Keyword + "&page=" + request.Page
+	url := config.Cfg.TangThuVienBaseUrl + "/ket-qua-tim-kiem?term=" + request.Keyword + "&page=" + request.Page
 
 	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
 

@@ -1,13 +1,15 @@
 package repository
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/gocolly/colly/v2"
+
 	"novel_crawler/config"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/util"
-	"strconv"
-	"strings"
 )
 
 type TruyenFullAdapter struct {
