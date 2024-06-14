@@ -8,14 +8,16 @@ import (
 	"novel_crawler/config"
 	"novel_crawler/internal/business"
 	"novel_crawler/internal/repository"
+	"novel_crawler/middleware"
 )
 
 func Start() {
 	router := gin.Default()
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5174, http://localhost:5173"},
-		AllowCredentials: true,
-	}))
+	// router.Use(cors.New(cors.Config{
+	// 	AllowOrigins:     []string{"http://localhost:5174, http://localhost:5173"},
+	// 	AllowCredentials: true,
+	// }))
+	router.Use(middleware.CorsMiddleware())
 
 	sourceAdapterManager := repository.SourceAdapterManager{}
 
