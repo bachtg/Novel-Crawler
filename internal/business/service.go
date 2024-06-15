@@ -141,6 +141,10 @@ func (service *Service) UpdateSourcePriority(sources []string) error {
 	}
 }
 
+func (service *Service) RemoveSourceAdapter(sourceDomain string) error {
+	return service.SourceAdapterManager.RemoveSource(sourceDomain)
+}
+
 func (service *Service) RegisterNewSourceAdapter(sourceAdapterId string) error {
 	path := fmt.Sprintf("./plugin/source_adapter_plugin/%s/%s.so", sourceAdapterId, sourceAdapterId)
 	plg, err := plugin.Open(path)
@@ -235,7 +239,7 @@ func (service *Service) GetAllTypes() []string {
 	return result
 }
 
-func(service *Service) DeleteType(extension string) error {
+func (service *Service) DeleteType(extension string) error {
 	err := service.ExporterManager.RemoveExporter(extension)
 	return err
 }

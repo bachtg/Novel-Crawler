@@ -53,6 +53,19 @@ func (sourceAdapterManager *SourceAdapterManager) AddNewSource(sources ...*Sourc
 	}
 }
 
+func (sourceAdapterManager *SourceAdapterManager) RemoveSource(sourceDomain string) error {
+	if sourceAdapterManager.SourceMapping != nil {
+		delete(sourceAdapterManager.SourceMapping, sourceDomain)
+		delete(sourceAdapterManager.PriorityMapping, sourceDomain)
+
+		index := 0
+		for key, _ := range sourceAdapterManager.PriorityMapping {
+			sourceAdapterManager.PriorityMapping[key] = index
+		}
+	}
+	return nil
+}
+
 func (sourceAdapterManager *SourceAdapterManager) GetAllSources() ([]*model.Source, error) {
 	numSource := len(sourceAdapterManager.SourceMapping)
 

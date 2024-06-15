@@ -8,7 +8,6 @@ import (
 
 	"github.com/gocolly/colly/v2"
 
-	"novel_crawler/config"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/util"
@@ -31,7 +30,7 @@ func (dtruyenAdapter *DTruyenAdapter) Connect() source_adapter.SourceAdapter {
 
 func (dtruyenAdapter *DTruyenAdapter) GetAllGenres() ([]*model.Genre, error) {
 	var genres []*model.Genre
-	url := config.Cfg.DTruyenBaseUrl
+	url := "https://dtruyen.com"
 	fmt.Println(url)
 	dtruyenAdapter.collector.OnHTML(".categories a", func(e *colly.HTMLElement) {
 		id := util.GetId(e.Attr("href"))
@@ -105,7 +104,7 @@ func (dtruyenAdapter *DTruyenAdapter) GetNovels(url string) (*model.GetNovelsRes
 }
 
 func (dtruyenAdapter *DTruyenAdapter) GetNovelsByGenre(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	url := config.Cfg.DTruyenBaseUrl + "/" + request.GenreId + "/" + request.Page
+	url := "https://dtruyen.com" + "/" + request.GenreId + "/" + request.Page
 	getNovelsResponse, err := dtruyenAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -121,7 +120,7 @@ func (dtruyenAdapter *DTruyenAdapter) GetNovelsByCategory(request *model.GetNove
 	} else {
 		key = "a"
 	}
-	url := config.Cfg.DTruyenBaseUrl + "/" + key + "/" + request.Page
+	url := "https://dtruyen.com" + "/" + key + "/" + request.Page
 	getNovelsResponse, err := dtruyenAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -136,7 +135,7 @@ func (dtruyenAdapter *DTruyenAdapter) GetDetailNovel(request *model.GetDetailNov
 		genres   []*model.Genre
 		chapters []*model.Chapter
 		numPage  = 1
-		url      = config.Cfg.DTruyenBaseUrl + "/" + request.NovelId + "/" + request.Page
+		url      = "https://dtruyen.com" + "/" + request.NovelId + "/" + request.Page
 	)
 
 	dtruyenAdapter.collector.OnHTML("#story-detail", func(e *colly.HTMLElement) {
@@ -201,7 +200,7 @@ func (dtruyenAdapter *DTruyenAdapter) GetDetailNovel(request *model.GetDetailNov
 }
 
 func (dtruyenAdapter *DTruyenAdapter) GetNovelsByKeyword(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	url := config.Cfg.DTruyenBaseUrl + "/searching/" + request.Keyword + "/" + request.Page
+	url := "https://dtruyen.com" + "/searching/" + request.Keyword + "/" + request.Page
 	getNovelsResponse, err := dtruyenAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -215,7 +214,7 @@ func (dtruyenAdapter *DTruyenAdapter) GetDetailChapter(request *model.GetDetailC
 		currentChapter = &model.Chapter{}
 		prevChapter    = &model.Chapter{}
 		nextChapter    = &model.Chapter{}
-		url            = config.Cfg.DTruyenBaseUrl + "/" + request.NovelId + "/" + request.ChapterId
+		url            = "https://dtruyen.com" + "/" + request.NovelId + "/" + request.ChapterId
 	)
 	fmt.Println("url")
 
@@ -264,7 +263,7 @@ func (dtruyenAdapter *DTruyenAdapter) GetDetailChapter(request *model.GetDetailC
 }
 
 func (dtruyenAdapter *DTruyenAdapter) GetNovelsByAuthor(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
-	url := config.Cfg.DTruyenBaseUrl + "/tac-gia/" + request.AuthorId + "/" + request.Page
+	url := "https://dtruyen.com" + "/tac-gia/" + request.AuthorId + "/" + request.Page
 	getNovelsResponse, err := dtruyenAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -275,3 +274,5 @@ func (dtruyenAdapter *DTruyenAdapter) GetNovelsByAuthor(request *model.GetNovels
 func (dtruyenAdapter *DTruyenAdapter) GetDomain() string {
 	return "dtruyen.com"
 }
+
+var SourceAdapter DTruyenAdapter

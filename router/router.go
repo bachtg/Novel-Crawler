@@ -41,16 +41,21 @@ func Start() {
 	novelService := business.NewService(&sourceAdapterManager, &exporterManager)
 	novelHandler := business.NewHandler(novelService)
 
-	router.GET("/genres", novelHandler.GetAllGenres)
 	router.GET("/novels/:novel_id", novelHandler.GetDetailNovel)
 	router.GET("/novels/:novel_id/:chapter_id", novelHandler.GetDetailChapter)
 	router.GET("/novels", novelHandler.GetNovels)
+
+	router.GET("/genres", novelHandler.GetAllGenres)
+
 	router.GET("/sources", novelHandler.GetAllSources)
 	router.POST("/sources/:source_id", novelHandler.RegisterNewSourceAdapter)
 	router.PATCH("/sources", novelHandler.UpdateSourcePriority)
-	router.POST("/downloads", novelHandler.Download)
+	router.DELETE("/sources/:domain", novelHandler.RemoveSourceAdapter)
+
 	router.GET("/types", novelHandler.GetTypes)
 	router.DELETE("/types/:type_id", novelHandler.DeleteType)
+
+	router.POST("/downloads", novelHandler.Download)
 
 	config.Cfg.Logger.Info("Server's running on", zap.String("address", config.Cfg.Address))
 	_ = router.Run()
