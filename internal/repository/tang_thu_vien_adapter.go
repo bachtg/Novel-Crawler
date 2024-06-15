@@ -7,9 +7,9 @@ import (
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/util"
-	"strings"
-	"strconv"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 type TangThuVienAdapter struct {
@@ -138,12 +138,20 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.Ge
 
 	totalGenre = make(map[string]string)
 	// Set map
-	geners, _ := tangThuVienAdapter.GetAllGenres()
-	for key, val := range geners {
+	done := make(chan int)
+	var genres []*model.Genre
+	go func() {
+		genres, _ = tangThuVienAdapter.GetAllGenres()
+
+		done <- 1
+	}()
+	<-done
+	for key, val := range genres {
 		totalGenre[val.Id] = strconv.Itoa(key + 1)
 	}
-
-	url := config.Cfg.TangThuVienBaseUrl + "/tong-hop?ctg=" + totalGenre[request.GenreId]
+	
+	url := config.Cfg.TangThuVienBaseUrl + "/tong-hop?ctg=" + totalGenre[request.GenreId] + "&page=" + request.Page
+	fmt.Println(url)
 	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
@@ -249,18 +257,24 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 
 	tangThuVienAdapter.collector.Wait()
 
-	chapters, err := tangThuVienAdapter.GetListChapters(story_id, request.Page, "60")
+	chapters, _ := tangThuVienAdapter.GetListChapters(story_id, "1", "10000")
+	fmt.Println(len(chapters)/60, len(chapters)%60)
+	numPage = len(chapters) / 60
+	if len(chapters)%60 != 0 {
+		numPage++
+	}
 	if chapters == nil {
 		return nil, &model.Err{
-                Code:    constant.InternalError,
-                Message: "Not found chapter",
-            }
+			Code:    constant.InternalError,
+			Message: "Not found chapter",
+		}
 	}
 	res.Chapters = chapters
 
 	return &model.GetDetailNovelResponse{
 			Novel:   res,
 			NumPage: numPage,
+			PerPage: 60,
 		},
 		nil
 }
@@ -349,9 +363,9 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailChapter(request *model.Ge
 	listChapter, _ := tangThuVienAdapter.GetListChapters(story_id, "1", "100000")
 	if listChapter == nil {
 		return nil, &model.Err{
-            Code:    constant.InternalError,
-            Message: "Not found chapter",
-        }
+			Code:    constant.InternalError,
+			Message: "Not found chapter",
+		}
 	}
 
 	detailChapterResponse.Novel.Chapters = listChapter

@@ -78,6 +78,7 @@ type GetDetailNovelRequest struct {
 type GetDetailNovelResponse struct {
 	Novel   *Novel
 	NumPage int
+	PerPage int
 }
 
 type DownloadChapterRequest struct {

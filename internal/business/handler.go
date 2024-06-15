@@ -109,6 +109,7 @@ func (handler *Handler) GetDetailNovel(ctx *gin.Context) {
 		"data": gin.H{
 			"novel":   getDetailNovelResponse.Novel,
 			"numPage": getDetailNovelResponse.NumPage,
+			"perPage": getDetailNovelResponse.PerPage,
 		},
 	})
 }
