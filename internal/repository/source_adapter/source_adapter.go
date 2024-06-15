@@ -59,7 +59,7 @@ func (sourceAdapterManager *SourceAdapterManager) RemoveSource(sourceDomain stri
 		delete(sourceAdapterManager.PriorityMapping, sourceDomain)
 
 		index := 0
-		for key, _ := range sourceAdapterManager.PriorityMapping {
+		for key := range sourceAdapterManager.PriorityMapping {
 			sourceAdapterManager.PriorityMapping[key] = index
 		}
 	}

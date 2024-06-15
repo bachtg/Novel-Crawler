@@ -254,3 +254,19 @@ func (handler *Handler) DeleteType(ctx *gin.Context) {
 		"message": "Remove successfully",
     })
 }
+
+func (handler *Handler) RemoveSourceAdapter(ctx *gin.Context) {
+	sourceDomain := ctx.Param("domain")
+	err := handler.Service.RemoveSourceAdapter(sourceDomain)
+
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": err.Error(),
+		})
+		ctx.Abort()
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": constant.Success,
+	})
+}

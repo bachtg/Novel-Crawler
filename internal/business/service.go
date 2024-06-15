@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
-	"novel_crawler/internal/repository"
+	"novel_crawler/internal/repository/exporter"
 	"novel_crawler/internal/repository/source_adapter"
 	"plugin"
 	"sync"
@@ -12,10 +12,10 @@ import (
 
 type Service struct {
 	SourceAdapterManager *source_adapter.SourceAdapterManager
-	*repository.ExporterManager
+	ExporterManager *exporter.ExporterManager
 }
 
-func NewService(sourceAdapterManager *source_adapter.SourceAdapterManager, exporterManager *repository.ExporterManager) *Service {
+func NewService(sourceAdapterManager *source_adapter.SourceAdapterManager, exporterManager *exporter.ExporterManager) *Service {
 	return &Service{sourceAdapterManager, exporterManager}
 }
 
@@ -205,15 +205,15 @@ func (service *Service) Download(request *model.DownloadChapterRequest) (*model.
 		}
 	}
 
-	var exporter repository.Exporter
+	var exp exporter.Exporter
 
 	if request.Type == "PDF" {
-		exporter = repository.NewPDFExporter()
+		exp = exporter.NewPDFExporter()
 	} else {
-		exporter = repository.NewEpubExporter()
+		exp = exporter.NewEpubExporter()
 	}
 
-	bytesData, err := exporter.Generate("<p>" + getDetailChapterResponse.CurrentChapter.Content + "</p>\n")
+	bytesData, err := exp.Generate("<p>" + getDetailChapterResponse.CurrentChapter.Content + "</p>\n")
 	if err != nil {
 		return nil, &model.Err{
 			Code:    constant.InternalError,
@@ -232,7 +232,7 @@ func (service *Service) Download(request *model.DownloadChapterRequest) (*model.
 func (service *Service) GetAllTypes() []string {
 	var result []string
 
-	for key, _ := range service.ExporterManager.ExporterMapping {
+	for key := range service.ExporterManager.ExporterMapping {
 		fmt.Println(key)
 		result = append(result, key)
 	}

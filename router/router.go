@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"novel_crawler/internal/repository"
+	"novel_crawler/internal/repository/exporter"
 	"novel_crawler/internal/repository/source_adapter"
 
 	"novel_crawler/config"
@@ -29,9 +29,9 @@ func Start() {
 		panic(err)
 	}
 
-	exporterManager := repository.ExporterManager{}
-	PDFExporter := repository.NewPDFExporter()
-	EpubExporter := repository.NewEpubExporter()
+	exporterManager := exporter.ExporterManager{}
+	PDFExporter := exporter.NewPDFExporter()
+	EpubExporter := exporter.NewEpubExporter()
 	err = exporterManager.AddNewExporter(&PDFExporter, &EpubExporter)
 	if err != nil {
 		config.Cfg.Logger.Error(err.Error())
