@@ -8,11 +8,8 @@ import (
 )
 
 type Config struct {
-	Logger            *zap.Logger
-	Address           string `yaml:"address"`
-	TruyenFullBaseUrl string `yaml:"truyen_full_base_url"`
-	DTruyenBaseUrl string `yaml:"d_truyen_base_url"`
-	TangThuVienBaseUrl string `yaml:"tang_thu_vien_base_url"`
+	Logger  *zap.Logger
+	Address string `yaml:"address"`
 }
 
 var Cfg Config
