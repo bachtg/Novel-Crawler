@@ -101,7 +101,11 @@ func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest)
 	if(errRes != nil) {
 		return nil, errRes
 	}
+	novel, _ := source.GetDetailNovel(&model.GetDetailNovelRequest{
+		NovelId: request.NovelId,
+	})
 	respone.Sources = sources
+	respone.Novel.CoverImage = novel.Novel.CoverImage
 	return respone, errRes
 }
 
