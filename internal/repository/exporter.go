@@ -18,7 +18,6 @@ type ExporterManager struct {
 }
 
 type PDFExporter struct {
-
 }
 
 func NewPDFExporter() Exporter {
@@ -59,7 +58,7 @@ func (pdfExporter *PDFExporter) Generate(content string) ([]byte, error) {
 	return pdfBytes, nil
 }
 
-func (exporterManager *ExporterManager) AddNewExporter(exporter ...*Exporter) (error) {
+func (exporterManager *ExporterManager) AddNewExporter(exporter ...*Exporter) error {
 	if exporterManager.ExporterMapping == nil {
 		exporterManager.ExporterMapping = make(map[string]*Exporter)
 	}
@@ -69,7 +68,6 @@ func (exporterManager *ExporterManager) AddNewExporter(exporter ...*Exporter) (e
 	return nil
 }
 
-func (PDFExporter *PDFExporter) Type() string {
+func (pdfExporter *PDFExporter) Type() string {
 	return "PDF"
 }
-
