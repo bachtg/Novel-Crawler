@@ -1,4 +1,4 @@
-package repository
+package source_adapter
 
 import (
 	"novel_crawler/constant"
@@ -6,6 +6,7 @@ import (
 )
 
 type SourceAdapter interface {
+	Connect() SourceAdapter
 	GetNovelsByGenre(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
 	GetNovelsByCategory(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
 	GetNovelsByAuthor(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error)
@@ -36,10 +37,10 @@ func (sourceAdapterManager *SourceAdapterManager) AddNewSource(sources ...*Sourc
 		}
 	}
 
-	for index, source := range sources {
+	for _, source := range sources {
 		sourceDomain := (*source).GetDomain()
 		sourceAdapterManager.SourceMapping[sourceDomain] = source
-		sourceAdapterManager.PriorityMapping[sourceDomain] = index
+		sourceAdapterManager.PriorityMapping[sourceDomain] = len(sourceAdapterManager.SourceMapping) - 1
 	}
 
 	if sourceAdapterManager.CurrentSource != nil {
