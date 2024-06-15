@@ -216,8 +216,16 @@ func (handler *Handler) Download(ctx *gin.Context) {
 	}
 
 	filename := fmt.Sprintf("%s.%s", downloadChapterResponse.Filename, downloadChapterRequest.Type)
-	ctx.Header("Content-Disposition", "attachment; filename="+filename)
-	ctx.Data(http.StatusOK, "application/"+downloadChapterRequest.Type, downloadChapterResponse.BytesData)
+	// ctx.Header("Content-Disposition", "attachment; filename="+filename)
+	// ctx.Data(http.StatusOK, "application/"+downloadChapterRequest.Type, downloadChapterResponse.BytesData)
+	ctx.JSON(http.StatusOK, gin.H{
+        "code": constant.Success,
+        "data": gin.H{
+            "filename": filename,
+			"bytes": downloadChapterResponse.BytesData,
+			"type": downloadChapterRequest.Type,
+        },
+    })
 }
 
 func (handler *Handler) GetTypes(ctx *gin.Context) {
