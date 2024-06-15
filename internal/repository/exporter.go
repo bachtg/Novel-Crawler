@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"novel_crawler/internal/model"
+	"novel_crawler/constant"
 )
 
 type Exporter interface {
@@ -70,4 +72,15 @@ func (exporterManager *ExporterManager) AddNewExporter(exporter ...*Exporter) er
 
 func (pdfExporter *PDFExporter) Type() string {
 	return "PDF"
+}
+
+func (exporterManager *ExporterManager) RemoveExporter(exporter string) error {
+	if exporterManager.ExporterMapping[exporter] == nil {
+        return &model.Err{
+			Code: constant.InternalError,
+            Message: "Exporter not found",
+		}
+    }
+	delete(exporterManager.ExporterMapping, exporter)
+	return nil
 }

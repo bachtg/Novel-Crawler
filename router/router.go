@@ -50,6 +50,7 @@ func Start() {
 	router.PATCH("/sources", novelHandler.UpdateSourcePriority)
 	router.POST("/downloads", novelHandler.Download)
 	router.GET("/types", novelHandler.GetTypes)
+	router.DELETE("/types/:type_id", novelHandler.DeleteType)
 
 	config.Cfg.Logger.Info("Server's running on", zap.String("address", config.Cfg.Address))
 	_ = router.Run()

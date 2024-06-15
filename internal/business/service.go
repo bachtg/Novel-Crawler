@@ -234,3 +234,8 @@ func (service *Service) GetAllTypes() []string {
 	}
 	return result
 }
+
+func(service *Service) DeleteType(extension string) error {
+	err := service.ExporterManager.RemoveExporter(extension)
+	return err
+}

@@ -237,3 +237,20 @@ func (handler *Handler) GetTypes(ctx *gin.Context) {
 		},
 	})
 }
+
+func (handler *Handler) DeleteType(ctx *gin.Context) {
+	extension := ctx.Param("type_id")
+	err := handler.Service.DeleteType(extension)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+            "code":    err.(*model.Err).Code,
+            "message": err.Error(),
+        })
+        ctx.Abort()
+        return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+        "code": constant.Success,
+		"message": "Remove successfully",
+    })
+}
