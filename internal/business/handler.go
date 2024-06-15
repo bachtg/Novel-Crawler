@@ -219,3 +219,13 @@ func (handler *Handler) Download(ctx *gin.Context) {
 	ctx.Header("Content-Disposition", "attachment; filename="+filename)
 	ctx.Data(http.StatusOK, "application/"+downloadChapterRequest.Type, downloadChapterResponse.BytesData)
 }
+
+func (handler *Handler) GetTypes(ctx *gin.Context) {
+	types := handler.Service.GetAllTypes();
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": constant.Success,
+		"data": gin.H{
+			"types": types,
+		},
+	})
+}

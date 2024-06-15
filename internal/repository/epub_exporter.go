@@ -45,3 +45,7 @@ func (epubExporter *EPUBExporter) Generate(content string) ([]byte, error) {
 
 	return contents, nil
 }
+
+func (epubExporter *EPUBExporter) Type() string {
+	return "EPUB"
+}

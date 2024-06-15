@@ -30,7 +30,17 @@ func Start() {
 		panic(err)
 	}
 
-	novelService := business.NewService(&sourceAdapterManager)
+	exporterManager := repository.ExporterManager{}
+	PDFExporter := repository.NewPDFExporter();
+	EpubExporter := repository.NewEpubExporter();
+	err = exporterManager.AddNewExporter(&PDFExporter, &EpubExporter)
+	exporterManager.AddNewExporter()
+	if err != nil {
+		config.Cfg.Logger.Error(err.Error())
+		panic(err)
+	}
+
+	novelService := business.NewService(&sourceAdapterManager, &exporterManager)
 	novelHandler := business.NewHandler(novelService)
 
 	router.GET("/genres", novelHandler.GetAllGenres)
@@ -41,6 +51,7 @@ func Start() {
 	router.POST("/sources/:domain", novelHandler.RegisterSourceAdapter)
 	router.PATCH("/sources", novelHandler.UpdateSourcePriority)
 	router.POST("/downloads", novelHandler.Download)
+	router.GET("/types", novelHandler.GetTypes)
 
 	config.Cfg.Logger.Info("Server's running on", zap.String("address", config.Cfg.Address))
 	_ = router.Run()

@@ -10,6 +10,7 @@ import (
 
 type Exporter interface {
 	Generate(content string) ([]byte, error)
+	Type() string
 }
 
 type ExporterManager struct {
@@ -58,7 +59,17 @@ func (pdfExporter *PDFExporter) Generate(content string) ([]byte, error) {
 	return pdfBytes, nil
 }
 
-func (exporterManager *ExporterManager) AddNewExporter(exporter *Exporter) (error) {
+func (exporterManager *ExporterManager) AddNewExporter(exporter ...*Exporter) (error) {
+	if exporterManager.ExporterMapping == nil {
+		exporterManager.ExporterMapping = make(map[string]*Exporter)
+	}
+	for _, exp := range exporter {
+		exporterManager.ExporterMapping[(*exp).Type()] = exp
+	}
 	return nil
+}
+
+func (PDFExporter *PDFExporter) Type() string {
+	return "PDF"
 }
 

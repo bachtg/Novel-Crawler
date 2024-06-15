@@ -5,14 +5,16 @@ import (
 	"novel_crawler/internal/model"
 	"novel_crawler/internal/repository"
 	"sync"
+	"fmt"
 )
 
 type Service struct {
 	*repository.SourceAdapterManager
+	*repository.ExporterManager
 }
 
-func NewService(sourceAdapterManager *repository.SourceAdapterManager) *Service {
-	return &Service{sourceAdapterManager}
+func NewService(sourceAdapterManager *repository.SourceAdapterManager, exporterManager *repository.ExporterManager) *Service {
+	return &Service{sourceAdapterManager, exporterManager}
 }
 
 func (service *Service) GetNovels(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
@@ -164,7 +166,7 @@ func (service *Service) Download(request *model.DownloadChapterRequest) (*model.
 
 	var exporter repository.Exporter
 
-	if request.Type == "pdf" {
+	if request.Type == "PDF" {
 		exporter = repository.NewPDFExporter()
 	} else {
 		exporter = repository.NewEpubExporter()
@@ -184,4 +186,14 @@ func (service *Service) Download(request *model.DownloadChapterRequest) (*model.
 		Filename:  filename,
 		BytesData: bytesData,
 	}, nil
+}
+
+func (service *Service) GetAllTypes() []string {
+	var result []string
+	
+	for key, _ := range service.ExporterManager.ExporterMapping{ 
+		fmt.Println(key)
+		result = append(result, key)
+	}
+	return result
 }
