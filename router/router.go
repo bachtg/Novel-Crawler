@@ -22,7 +22,7 @@ func Start() {
 
 	truyenFullAdapter := repository.NewTruyenFullAdapter()
 	tangThuVienAdapter := repository.NewTangThuVienAdapter()
-	netTruyenAdapter := repository.NewNetTruyenAdapter()
+	netTruyenAdapter := repository.NewDTruyenAdapter()
 
 	err := sourceAdapterManager.AddNewSource(&tangThuVienAdapter, &truyenFullAdapter, &netTruyenAdapter)
 	if err != nil {
