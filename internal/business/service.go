@@ -1,20 +1,26 @@
 package business
 
 import (
+	"fmt"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/internal/repository"
+	"novel_crawler/internal/repository/source_adapter"
+	"plugin"
 	"sync"
-	"fmt"
 )
 
 type Service struct {
-	*repository.SourceAdapterManager
+	SourceAdapterManager *source_adapter.SourceAdapterManager
 	*repository.ExporterManager
 }
 
-func NewService(sourceAdapterManager *repository.SourceAdapterManager, exporterManager *repository.ExporterManager) *Service {
+func NewService(sourceAdapterManager *source_adapter.SourceAdapterManager, exporterManager *repository.ExporterManager) *Service {
 	return &Service{sourceAdapterManager, exporterManager}
+}
+
+func (service *Service) GetAllSources() ([]*model.Source, error) {
+	return service.SourceAdapterManager.GetAllSources()
 }
 
 func (service *Service) GetNovels(request *model.GetNovelsRequest) (*model.GetNovelsResponse, error) {
@@ -61,12 +67,12 @@ func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest)
 	resultChan := make(chan *model.GetDetailChapterResponse, sourceNum)
 	var errRes error
 	for key, value := range service.SourceAdapterManager.SourceMapping {
-		go func(key string, value *repository.SourceAdapter) {
+		go func(key string, value *source_adapter.SourceAdapter) {
 			defer wg.Done()
 			adapter := value
 			resp, err := (*adapter).GetDetailChapter(&model.GetDetailChapterRequest{
-				NovelId: request.NovelId,
-				ChapterId: request.ChapterId,
+				NovelId:      request.NovelId,
+				ChapterId:    request.ChapterId,
 				SourceDomain: key,
 			})
 
@@ -89,16 +95,16 @@ func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest)
 
 	for result := range resultChan {
 		if result.CurrentChapter.Title != "" {
-            sources = append(sources, result.CurrentSource)
+			sources = append(sources, result.CurrentSource)
 			if result.CurrentSource == request.SourceDomain {
 				respone = result
 			}
 			if result.CurrentSource == source.GetDomain() {
 				respone = result
 			}
-        }
+		}
 	}
-	if(errRes != nil) {
+	if errRes != nil {
 		return nil, errRes
 	}
 	novel, _ := source.GetDetailNovel(&model.GetDetailNovelRequest{
@@ -135,7 +141,34 @@ func (service *Service) UpdateSourcePriority(sources []string) error {
 	}
 }
 
-func (service *Service) RegisterSourceAdapter(domain string) error {
+func (service *Service) RegisterNewSourceAdapter(sourceAdapterId string) error {
+	path := fmt.Sprintf("./plugin/source_adapter_plugin/%s/%s.so", sourceAdapterId, sourceAdapterId)
+	plg, err := plugin.Open(path)
+	if err != nil {
+		return err
+	}
+	symSourceAdapter, err := plg.Lookup("SourceAdapter")
+	if err != nil {
+		return &model.Err{
+			Code:    constant.InternalError,
+			Message: err.Error(),
+		}
+	}
+	sourceAdapter, ok := symSourceAdapter.(source_adapter.SourceAdapter)
+	if !ok {
+		return &model.Err{
+			Code:    constant.InternalError,
+			Message: "Cannot add new source",
+		}
+	}
+	sourceAdapter.Connect()
+	err = service.SourceAdapterManager.AddNewSource(&sourceAdapter)
+	if err != nil {
+		return &model.Err{
+			Code:    constant.InternalError,
+			Message: err.Error(),
+		}
+	}
 	return nil
 }
 
@@ -194,8 +227,8 @@ func (service *Service) Download(request *model.DownloadChapterRequest) (*model.
 
 func (service *Service) GetAllTypes() []string {
 	var result []string
-	
-	for key, _ := range service.ExporterManager.ExporterMapping{ 
+
+	for key, _ := range service.ExporterManager.ExporterMapping {
 		fmt.Println(key)
 		result = append(result, key)
 	}

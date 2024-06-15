@@ -172,14 +172,14 @@ func (handler *Handler) GetDetailChapter(ctx *gin.Context) {
 			"current_chapter":  getDetailChapterResponse.CurrentChapter,
 			"previous_chapter": getDetailChapterResponse.PreviousChapter,
 			"next_chapter":     getDetailChapterResponse.NextChapter,
-			"sources": getDetailChapterResponse.Sources,
+			"sources":          getDetailChapterResponse.Sources,
 		},
 	})
 }
 
-func (handler *Handler) RegisterSourceAdapter(ctx *gin.Context) {
-	domain := ctx.Param("domain")
-	err := handler.Service.RegisterSourceAdapter(domain)
+func (handler *Handler) RegisterNewSourceAdapter(ctx *gin.Context) {
+	sourceId := ctx.Param("source_id")
+	err := handler.Service.RegisterNewSourceAdapter(sourceId)
 
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
@@ -219,17 +219,17 @@ func (handler *Handler) Download(ctx *gin.Context) {
 	// ctx.Header("Content-Disposition", "attachment; filename="+filename)
 	// ctx.Data(http.StatusOK, "application/"+downloadChapterRequest.Type, downloadChapterResponse.BytesData)
 	ctx.JSON(http.StatusOK, gin.H{
-        "code": constant.Success,
-        "data": gin.H{
-            "filename": filename,
-			"bytes": downloadChapterResponse.BytesData,
-			"type": downloadChapterRequest.Type,
-        },
-    })
+		"code": constant.Success,
+		"data": gin.H{
+			"filename": filename,
+			"bytes":    downloadChapterResponse.BytesData,
+			"type":     downloadChapterRequest.Type,
+		},
+	})
 }
 
 func (handler *Handler) GetTypes(ctx *gin.Context) {
-	types := handler.Service.GetAllTypes();
+	types := handler.Service.GetAllTypes()
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": constant.Success,
 		"data": gin.H{
