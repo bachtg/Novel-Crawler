@@ -8,6 +8,7 @@ import (
 	"novel_crawler/internal/repository/source_adapter"
 	"plugin"
 	"sync"
+	"golang.org/x/sync/errgroup"
 )
 
 type Service struct {
@@ -29,18 +30,59 @@ func (service *Service) GetNovels(request *model.GetNovelsRequest) (*model.GetNo
 	if request.Page == "" {
 		request.Page = "1"
 	}
+	
 	if request.Keyword != "" {
-		return source.GetNovelsByKeyword(request)
+
+		temp, err := source.GetNovelsByKeyword(request)
+
+		if err != nil {
+			return nil, err
+		}
+
+		novels := GetNovelsGoRoutine(source.GetNovelsByKeyword, temp.NumPage, request)
+
+		temp.Novels = novels
+		return temp, nil
 	}
+
 	if request.GenreId != "" {
-		return source.GetNovelsByGenre(request)
+		temp, err := source.GetNovelsByGenre(request)
+
+		if err != nil {
+			return nil, err
+		}
+
+		novels := GetNovelsGoRoutine(source.GetNovelsByGenre, temp.NumPage, request)
+
+		temp.Novels = novels
+
+		return temp, nil
 	}
 	if request.CategoryId != "" {
-		return source.GetNovelsByCategory(request)
+		temp, err := source.GetNovelsByCategory(request)
+
+		if err != nil {
+			return nil, err
+		}
+
+		novels := GetNovelsGoRoutine(source.GetNovelsByCategory, temp.NumPage, request)
+
+		temp.Novels = novels
+		return temp, nil
 	}
 	if request.AuthorId != "" {
-		return source.GetNovelsByAuthor(request)
+		temp, err := source.GetNovelsByAuthor(request)
+
+		if err != nil {
+			return nil, err
+		}
+
+		novels := GetNovelsGoRoutine(source.GetNovelsByAuthor, temp.NumPage, request)
+
+		temp.Novels = novels
+		return temp, nil
 	}
+
 	return nil, &model.Err{
 		Code:    constant.InvalidRequest,
 		Message: "Invalid Request",
@@ -65,7 +107,7 @@ func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest)
 	var wg sync.WaitGroup
 	wg.Add(sourceNum)
 	resultChan := make(chan *model.GetDetailChapterResponse, sourceNum)
-	var errRes error
+	//var errRes error
 	for key, value := range service.SourceAdapterManager.SourceMapping {
 		go func(key string, value *source_adapter.SourceAdapter) {
 			defer wg.Done()
@@ -76,7 +118,7 @@ func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest)
 				SourceDomain: key,
 			})
 
-			errRes = err
+			//errRes = err
 
 			if err == nil {
 				resp.CurrentSource = key
@@ -104,15 +146,23 @@ func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest)
 			}
 		}
 	}
-	if errRes != nil {
-		return nil, errRes
-	}
+	// if errRes != nil {
+	// 	return nil, errRes
+	// }
+	
 	novel, _ := source.GetDetailNovel(&model.GetDetailNovelRequest{
 		NovelId: request.NovelId,
 	})
+
+	if respone.Novel == nil || novel.Novel == nil {
+		return nil, &model.Err{
+            Code:    constant.InternalError,
+            Message: "Not found novel",
+        }
+	}
 	respone.Sources = sources
 	respone.Novel.CoverImage = novel.Novel.CoverImage
-	return respone, errRes
+	return respone, nil
 }
 
 func (service *Service) UpdateSourcePriority(sources []string) error {
@@ -268,3 +318,50 @@ func (service *Service) DeleteType(extension string) error {
 	err := service.ExporterManager.RemoveExporter(extension)
 	return err
 }
+
+func GetNovelsGoRoutine(f func(*model.GetNovelsRequest) (*model.GetNovelsResponse, error), numPage int, request *model.GetNovelsRequest) []*model.Novel {
+	var novels []*model.Novel
+	numGoroutines := numPage / 2
+	size := numPage
+
+	chunkSize := size / numGoroutines
+	var mu sync.Mutex
+	g := errgroup.Group{}
+	for i := 0; i < numGoroutines; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		if i == numGoroutines-1 {
+			end = size
+		}
+		g.Go(func() error {
+			func(start, end int) {
+				var partialNovels []*model.Novel
+				mu.Lock()
+				for j := start; j < end; j++ {
+					requestTemp := request 
+					requestTemp.Page = fmt.Sprintf("%d", j+1)
+					resp, err := f(requestTemp)
+
+					if err != nil {
+						return
+					}
+
+					partialNovels = append(partialNovels, resp.Novels...)
+
+				}
+				novels = append(novels, partialNovels...)
+				mu.Unlock()
+			}(start, end)
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		fmt.Println(err.Error())
+		return nil
+	}
+
+	return novels
+}
+
+

@@ -3,12 +3,13 @@ package source_adapter
 import (
 	"strconv"
 	"strings"
-
+	"golang.org/x/sync/errgroup"
 	"github.com/gocolly/colly/v2"
-
+	"fmt"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/util"
+	"sync"
 )
 
 type TruyenFullAdapter struct {
@@ -273,6 +274,62 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailChapter(request *model.GetD
 	}
 
 	truyenFullAdapter.collector.Wait()
+
+	// Get list chapter
+	var chapters []*model.Chapter
+	data, _ := truyenFullAdapter.GetDetailNovel(&model.GetDetailNovelRequest{
+		NovelId: request.NovelId,
+		Page:    "1",
+	})
+
+	size := data.NumPage
+
+	numGoroutines := size / 2
+	chunkSize := size / numGoroutines
+
+	var mu sync.Mutex
+	g := errgroup.Group{}
+
+	for i := 0; i < numGoroutines; i++ {
+		start := i * chunkSize
+		end := start + chunkSize
+		if i == numGoroutines-1 {
+			end = size
+		}
+
+		g.Go(func() error {
+			func(start, end int, adapter SourceAdapter) {
+				paritalChapters := []*model.Chapter{}
+				mu.Lock()
+				for j := start; j < end; j++ {
+					temp, err := truyenFullAdapter.GetDetailNovel(&model.GetDetailNovelRequest{
+						NovelId: request.NovelId,
+						Page:    strconv.Itoa(j+1),
+					})
+
+					if err != nil {
+						return
+					}
+					
+					paritalChapters = append(paritalChapters, temp.Novel.Chapters...)
+
+				}
+				
+				chapters = append(chapters, paritalChapters...)
+				mu.Unlock()
+			}(start, end, truyenFullAdapter)
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	chapters = util.SortChapter(chapters)
+	novel.Chapters = chapters
+	fmt.Println(len(chapters))
+
 
 	return &model.GetDetailChapterResponse{
 		Novel:           novel,

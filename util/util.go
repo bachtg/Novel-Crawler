@@ -3,6 +3,8 @@ package util
 import (
 	"strconv"
 	"strings"
+	"novel_crawler/internal/model"
+	"sort"
 )
 
 func Max(num1, num2 int) int {
@@ -60,4 +62,23 @@ func FindPrevAndNextChapters(current string, chapterNew string, chapterLast stri
 	prev = "chuong-" + prev
 	next = "chuong-" + next
 	return prev, next
+}
+
+type Chapters []*model.Chapter
+
+func (c Chapters) Len() int {
+	return len(c)
+}
+func (c Chapters) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+func (c Chapters) Less(i, j int) bool {
+	num1, _ := strconv.Atoi(c[i].Id[7:])
+	num2, _ := strconv.Atoi(c[j].Id[7:])
+	return num1 < num2
+}
+
+func SortChapter(chapters []*model.Chapter) []*model.Chapter {
+	sort.Sort(Chapters(chapters))
+	return chapters
 }
