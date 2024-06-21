@@ -107,10 +107,10 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovels(url string) (*model.GetN
 	tangThuVienAdapter.collector.OnHTML(".pagination", func(e *colly.HTMLElement) {
 		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
 			num, _ := strconv.Atoi(child.Text)
-			numPage = max(numPage, num)
+			numPage = util.Max(numPage, num)
 		})
 		activePage, _ := strconv.Atoi(strings.Split(e.ChildText(".active"), " ")[0])
-		numPage = max(numPage, activePage)
+		numPage = util.Max(numPage, activePage)
 	})
 
 	err := tangThuVienAdapter.collector.Visit(url)
@@ -231,7 +231,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 	numPage := 1
 	tangThuVienAdapter.collector.OnHTML(".list-chapter .pagination", func(e *colly.HTMLElement) {
 		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
-			numPage = max(numPage, util.GetNumPage(child.Text, ""))
+			numPage = util.Max(numPage, util.GetNumPage(child.Text, ""))
 		})
 	})
 

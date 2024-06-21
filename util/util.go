@@ -5,6 +5,13 @@ import (
 	"strings"
 )
 
+func Max(num1, num2 int) int {
+	if num1 > num2 {
+		return num1
+	}
+	return num2
+}
+
 func GetId(url string) string {
 	url = strings.TrimSuffix(url, "/")
 	parts := strings.Split(url, "/")

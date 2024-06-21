@@ -10,7 +10,7 @@ import (
 type PDFExporter struct {
 }
 
-func NewPDFExporter() Exporter {
+func (pdfExporter *PDFExporter) New() Exporter {
 	return &PDFExporter{}
 }
 
@@ -21,8 +21,8 @@ func (pdfExporter *PDFExporter) Generate(content string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	_, err = part.Write([]byte(content))
+	html := "<pre>" + content + "</pre>"
+	_, err = part.Write([]byte(html))
 	if err != nil {
 		return nil, err
 	}
@@ -41,31 +41,21 @@ func (pdfExporter *PDFExporter) Generate(content string) ([]byte, error) {
 	}(resp.Body)
 
 	var pdfBytes []byte
-    buf := make([]byte, 1024)
-    for {
-        n, err := resp.Body.Read(buf)
-        if err != nil && err != io.EOF {
-            return nil, err
-        }
-        if n == 0 {
-            break
-        }
-        pdfBytes = append(pdfBytes, buf[:n]...)
-    }
+	buf := make([]byte, 1024)
+	for {
+		n, err := resp.Body.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, err
+		}
+		if n == 0 {
+			break
+		}
+		pdfBytes = append(pdfBytes, buf[:n]...)
+	}
 
 	return pdfBytes, nil
 }
 
-func (exporterManager *ExporterManager) AddNewExporter(exporter ...*Exporter) error {
-	if exporterManager.ExporterMapping == nil {
-		exporterManager.ExporterMapping = make(map[string]*Exporter)
-	}
-	for _, exp := range exporter {
-		exporterManager.ExporterMapping[(*exp).Type()] = exp
-	}
-	return nil
-}
-
 func (pdfExporter *PDFExporter) Type() string {
-	return "PDF"
+	return "pdf"
 }

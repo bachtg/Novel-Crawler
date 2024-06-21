@@ -88,10 +88,10 @@ func (truyenFullAdapter *TruyenFullAdapter) GetNovels(url string) (*model.GetNov
 	// get number of page
 	truyenFullAdapter.collector.OnHTML(".pagination", func(e *colly.HTMLElement) {
 		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
-			numPage = max(numPage, util.GetNumPage(child.Attr("href"), "trang-", "page="))
+			numPage = util.Max(numPage, util.GetNumPage(child.Attr("href"), "trang-", "page="))
 		})
 		activePage, _ := strconv.Atoi(strings.Split(e.ChildText(".active"), " ")[0])
-		numPage = max(numPage, activePage)
+		numPage = util.Max(numPage, activePage)
 	})
 
 	err := truyenFullAdapter.collector.Visit(url)
@@ -188,10 +188,10 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailNovel(request *model.GetDet
 	// get number of page
 	truyenFullAdapter.collector.OnHTML(".pagination", func(e *colly.HTMLElement) {
 		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
-			numPage = max(numPage, util.GetNumPage(child.Attr("href"), "trang-"))
+			numPage = util.Max(numPage, util.GetNumPage(child.Attr("href"), "trang-"))
 		})
 		activePage, _ := strconv.Atoi(strings.Split(e.ChildText(".active"), " ")[0])
-		numPage = max(numPage, activePage)
+		numPage = util.Max(numPage, activePage)
 	})
 
 	err := truyenFullAdapter.collector.Visit(url)

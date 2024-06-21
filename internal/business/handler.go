@@ -193,6 +193,22 @@ func (handler *Handler) RegisterNewSourceAdapter(ctx *gin.Context) {
 	})
 }
 
+func (handler *Handler) RegisterNewExporter(ctx *gin.Context) {
+	typeId := ctx.Param("type_id")
+	err := handler.Service.RegisterNewExporter(typeId)
+
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": err.Error(),
+		})
+		ctx.Abort()
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": constant.Success,
+	})
+}
+
 func (handler *Handler) Download(ctx *gin.Context) {
 	downloadChapterRequest := &model.DownloadChapterRequest{}
 	if err := ctx.ShouldBind(&downloadChapterRequest); err != nil {
@@ -243,16 +259,16 @@ func (handler *Handler) DeleteType(ctx *gin.Context) {
 	err := handler.Service.DeleteType(extension)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
-            "code":    err.(*model.Err).Code,
-            "message": err.Error(),
-        })
-        ctx.Abort()
-        return
+			"code":    err.(*model.Err).Code,
+			"message": err.Error(),
+		})
+		ctx.Abort()
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
-        "code": constant.Success,
+		"code":    constant.Success,
 		"message": "Remove successfully",
-    })
+	})
 }
 
 func (handler *Handler) RemoveSourceAdapter(ctx *gin.Context) {
@@ -268,5 +284,12 @@ func (handler *Handler) RemoveSourceAdapter(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": constant.Success,
+	})
+}
+
+func (handler *Handler) ErrorHandler(ctx *gin.Context) {
+	ctx.JSON(200, gin.H{
+		"code":    constant.InvalidRequest,
+		"message": "Not found page",
 	})
 }

@@ -12,7 +12,7 @@ import (
 
 type Service struct {
 	SourceAdapterManager *source_adapter.SourceAdapterManager
-	ExporterManager *exporter.ExporterManager
+	ExporterManager      *exporter.ExporterManager
 }
 
 func NewService(sourceAdapterManager *source_adapter.SourceAdapterManager, exporterManager *exporter.ExporterManager) *Service {
@@ -176,6 +176,37 @@ func (service *Service) RegisterNewSourceAdapter(sourceAdapterId string) error {
 	return nil
 }
 
+func (service *Service) RegisterNewExporter(typeId string) error {
+	path := fmt.Sprintf("./plugin/exporter_plugin/%s/%s.so", typeId, typeId)
+	plg, err := plugin.Open(path)
+	if err != nil {
+		return err
+	}
+	symExporter, err := plg.Lookup("Exporter")
+	if err != nil {
+		return &model.Err{
+			Code:    constant.InternalError,
+			Message: err.Error(),
+		}
+	}
+	newExporter, ok := symExporter.(exporter.Exporter)
+	if !ok {
+		return &model.Err{
+			Code:    constant.InternalError,
+			Message: "Cannot add new exporter",
+		}
+	}
+	newExporter.New()
+	err = service.ExporterManager.AddNewExporter(&newExporter)
+	if err != nil {
+		return &model.Err{
+			Code:    constant.InternalError,
+			Message: err.Error(),
+		}
+	}
+	return nil
+}
+
 func (service *Service) Download(request *model.DownloadChapterRequest) (*model.DownloadChapterResponse, error) {
 
 	getDetailChapterResponse, err := service.GetDetailChapter(&model.GetDetailChapterRequest{
@@ -205,15 +236,9 @@ func (service *Service) Download(request *model.DownloadChapterRequest) (*model.
 		}
 	}
 
-	var exp exporter.Exporter
+	exp := service.ExporterManager.ExporterMapping[request.Type]
 
-	if request.Type == "PDF" {
-		exp = exporter.NewPDFExporter()
-	} else {
-		exp = exporter.NewEpubExporter()
-	}
-
-	bytesData, err := exp.Generate("<p>" + getDetailChapterResponse.CurrentChapter.Content + "</p>\n")
+	bytesData, err := (*exp).Generate("<p>" + getDetailChapterResponse.CurrentChapter.Content + "</p>\n")
 	if err != nil {
 		return nil, &model.Err{
 			Code:    constant.InternalError,

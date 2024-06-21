@@ -81,10 +81,10 @@ func (dtruyenAdapter *DTruyenAdapter) GetNovels(url string) (*model.GetNovelsRes
 	dtruyenAdapter.collector.OnHTML(".pagination", func(e *colly.HTMLElement) {
 		e.ForEach("a", func(_ int, child *colly.HTMLElement) {
 			num, _ := strconv.Atoi(child.Text)
-			numPage = max(numPage, num)
+			numPage = util.Max(numPage, num)
 		})
 		activePage, _ := strconv.Atoi(strings.Split(e.ChildText(".active"), " ")[0])
-		numPage = max(numPage, activePage)
+		numPage = util.Max(numPage, activePage)
 	})
 
 	err := dtruyenAdapter.collector.Visit(url)

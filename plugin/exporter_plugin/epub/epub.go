@@ -1,9 +1,10 @@
-package exporter
+package main
 
 import (
-	//"io/ioutil"
 	"os"
+
 	"github.com/bmaupin/go-epub"
+	"novel_crawler/internal/repository/exporter"
 
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
@@ -12,14 +13,15 @@ import (
 type EPUBExporter struct {
 }
 
-func NewEpubExporter() Exporter {
+func (epubExporter *EPUBExporter) New() exporter.Exporter {
 	return &EPUBExporter{}
 }
 
 func (epubExporter *EPUBExporter) Generate(content string) ([]byte, error) {
 	e := epub.NewEpub("Collection")
 
-	_, err := e.AddSection(content, "Content", "", "")
+	html := "<pre>" + content + "</pre>"
+	_, err := e.AddSection(html, "Content", "", "")
 	if err != nil {
 		return nil, &model.Err{
 			Code:    constant.InternalError,
@@ -47,5 +49,7 @@ func (epubExporter *EPUBExporter) Generate(content string) ([]byte, error) {
 }
 
 func (epubExporter *EPUBExporter) Type() string {
-	return "EPUB"
+	return "epub"
 }
+
+var Exporter EPUBExporter

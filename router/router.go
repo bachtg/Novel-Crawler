@@ -30,9 +30,9 @@ func Start() {
 	}
 
 	exporterManager := exporter.ExporterManager{}
-	PDFExporter := exporter.NewPDFExporter()
-	EpubExporter := exporter.NewEpubExporter()
-	err = exporterManager.AddNewExporter(&PDFExporter, &EpubExporter)
+	PDFExporter := exporter.PDFExporter{}
+	PDFExporterWrapper := PDFExporter.New()
+	err = exporterManager.AddNewExporter(&PDFExporterWrapper)
 	if err != nil {
 		config.Cfg.Logger.Error(err.Error())
 		panic(err)
@@ -53,9 +53,13 @@ func Start() {
 	router.DELETE("/sources/:domain", novelHandler.RemoveSourceAdapter)
 
 	router.GET("/types", novelHandler.GetTypes)
+	router.POST("/types/:type_id", novelHandler.RegisterNewExporter)
 	router.DELETE("/types/:type_id", novelHandler.DeleteType)
 
 	router.POST("/downloads", novelHandler.Download)
+	router.OPTIONS("/downloads", novelHandler.Download)
+
+	router.NoRoute(novelHandler.ErrorHandler)
 
 	config.Cfg.Logger.Info("Server's running on", zap.String("address", config.Cfg.Address))
 	_ = router.Run()
