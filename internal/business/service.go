@@ -30,57 +30,17 @@ func (service *Service) GetNovels(request *model.GetNovelsRequest) (*model.GetNo
 	if request.Page == "" {
 		request.Page = "1"
 	}
-	
 	if request.Keyword != "" {
-
-		temp, err := source.GetNovelsByKeyword(request)
-
-		if err != nil {
-			return nil, err
-		}
-
-		novels := GetNovelsGoRoutine(source.GetNovelsByKeyword, temp.NumPage, request)
-
-		temp.Novels = novels
-		return temp, nil
+		return source.GetNovelsByKeyword(request)
 	}
-
 	if request.GenreId != "" {
-		temp, err := source.GetNovelsByGenre(request)
-
-		if err != nil {
-			return nil, err
-		}
-
-		novels := GetNovelsGoRoutine(source.GetNovelsByGenre, temp.NumPage, request)
-
-		temp.Novels = novels
-
-		return temp, nil
+		return source.GetNovelsByGenre(request)
 	}
 	if request.CategoryId != "" {
-		temp, err := source.GetNovelsByCategory(request)
-
-		if err != nil {
-			return nil, err
-		}
-
-		novels := GetNovelsGoRoutine(source.GetNovelsByCategory, temp.NumPage, request)
-
-		temp.Novels = novels
-		return temp, nil
+		return source.GetNovelsByCategory(request)
 	}
 	if request.AuthorId != "" {
-		temp, err := source.GetNovelsByAuthor(request)
-
-		if err != nil {
-			return nil, err
-		}
-
-		novels := GetNovelsGoRoutine(source.GetNovelsByAuthor, temp.NumPage, request)
-
-		temp.Novels = novels
-		return temp, nil
+		return source.GetNovelsByAuthor(request)
 	}
 
 	return nil, &model.Err{

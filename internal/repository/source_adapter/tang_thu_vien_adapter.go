@@ -84,6 +84,9 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovels(url string) (*model.GetN
 		image := e.ChildAttr("img", "src")
 		chapterNumberStr := e.ChildText(".KIBoOgno")
 		authorName := e.ChildText(".book-mid-info .author .name")
+		if len(e.ChildAttrs(".book-mid-info .author .name", "href")) == 0 {
+			return
+		}
 		authorHref := e.ChildAttrs(".book-mid-info .author .name", "href")[0]
 		authorId := strings.Split(authorHref, "author=")[1]
 		var authors []*model.Author
