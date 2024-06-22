@@ -251,7 +251,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetDetailNovel(request *model.GetD
 
 	tangThuVienAdapter.collector.Wait()
 
-	chapters, _ := tangThuVienAdapter.GetListChapters(story_id, request.Page, "60")
+	chapters, _ := tangThuVienAdapter.GetListChapters(story_id, request.Page, "10000")
 	if chapters == nil {
 		return nil, &model.Err{
 			Code:    constant.InternalError,
