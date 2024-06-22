@@ -61,6 +61,7 @@ func (sourceAdapterManager *SourceAdapterManager) RemoveSource(sourceDomain stri
 		index := 0
 		for key := range sourceAdapterManager.PriorityMapping {
 			sourceAdapterManager.PriorityMapping[key] = index
+			index += 1
 		}
 	}
 	return nil

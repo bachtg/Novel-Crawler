@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"novel_crawler/internal/repository/source_adapter"
 	"strconv"
 	"strings"
 
@@ -10,6 +9,7 @@ import (
 
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
+	"novel_crawler/internal/repository/source_adapter"
 	"novel_crawler/util"
 )
 

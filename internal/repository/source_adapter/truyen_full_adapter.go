@@ -2,14 +2,16 @@ package source_adapter
 
 import (
 	"fmt"
-	"github.com/gocolly/colly/v2"
-	"golang.org/x/sync/errgroup"
-	"novel_crawler/constant"
-	"novel_crawler/internal/model"
-	"novel_crawler/util"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/gocolly/colly/v2"
+	"golang.org/x/sync/errgroup"
+
+	"novel_crawler/constant"
+	"novel_crawler/internal/model"
+	"novel_crawler/util"
 )
 
 type TruyenFullAdapter struct {
@@ -268,10 +270,10 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailChapter(request *model.GetD
 	})
 
 	truyenFullAdapter.collector.OnHTML(".btn-group", func(e *colly.HTMLElement) {
-		previousChapterId := util.GetId(e.ChildAttr("#prev_chap", "href"))
+		previousChapterId := util.GetId(e.ChildAttr("#next_chap", "href"))
 		prevChapter.Id = previousChapterId
 
-		nextChapterId := util.GetId(e.ChildAttr("#next_chap", "href"))
+		nextChapterId := util.GetId(e.ChildAttr("#prev_chap", "href"))
 		nextChapter.Id = nextChapterId
 	})
 

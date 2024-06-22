@@ -2,13 +2,15 @@ package business
 
 import (
 	"fmt"
+	"plugin"
+	"sync"
+
+	"golang.org/x/sync/errgroup"
+
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/internal/repository/exporter"
 	"novel_crawler/internal/repository/source_adapter"
-	"plugin"
-	"sync"
-	"golang.org/x/sync/errgroup"
 )
 
 type Service struct {
@@ -93,41 +95,38 @@ func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest)
 
 	source := *service.SourceAdapterManager.CurrentSource
 	var sources []string
-	var respone *model.GetDetailChapterResponse
+	var response *model.GetDetailChapterResponse
 	check := 0
 	for result := range resultChan {
 		if result.CurrentChapter.Title != "" {
 			sources = append(sources, result.CurrentSource)
 			if result.CurrentSource == request.SourceDomain {
-				respone = result
+				response = result
 				check = 1
 			}
 			if result.CurrentSource == source.GetDomain() {
-				respone = result
+				response = result
 				check = 1
 			}
-			if (check == 0 ) {
-				respone = result
+			if check == 0 {
+				response = result
 			}
 		}
 	}
-	// if errRes != nil {
-	// 	return nil, errRes
-	// }
-	
+
 	novel, _ := source.GetDetailNovel(&model.GetDetailNovelRequest{
 		NovelId: request.NovelId,
 	})
 
-	if respone.Novel == nil || novel.Novel == nil {
+	if response == nil || response.Novel == nil || novel.Novel == nil {
 		return nil, &model.Err{
-            Code:    constant.InternalError,
-            Message: "Not found novel",
-        }
+			Code:    constant.InternalError,
+			Message: "Not found novel",
+		}
 	}
-	respone.Sources = sources
-	respone.Novel.CoverImage = novel.Novel.CoverImage
-	return respone, nil
+	response.Sources = sources
+	response.Novel.CoverImage = novel.Novel.CoverImage
+	return response, nil
 }
 
 func (service *Service) UpdateSourcePriority(sources []string) error {
@@ -273,7 +272,6 @@ func (service *Service) GetAllTypes() []string {
 	var result []string
 
 	for key := range service.ExporterManager.ExporterMapping {
-		fmt.Println(key)
 		result = append(result, key)
 	}
 	return result
@@ -303,7 +301,7 @@ func GetNovelsGoRoutine(f func(*model.GetNovelsRequest) (*model.GetNovelsRespons
 				var partialNovels []*model.Novel
 				mu.Lock()
 				for j := start; j < end; j++ {
-					requestTemp := request 
+					requestTemp := request
 					requestTemp.Page = fmt.Sprintf("%d", j+1)
 					resp, err := f(requestTemp)
 
@@ -328,5 +326,3 @@ func GetNovelsGoRoutine(f func(*model.GetNovelsRequest) (*model.GetNovelsRespons
 
 	return novels
 }
-
-

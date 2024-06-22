@@ -2,13 +2,15 @@ package source_adapter
 
 import (
 	"fmt"
-	"github.com/gocolly/colly/v2"
-	"novel_crawler/constant"
-	"novel_crawler/internal/model"
-	"novel_crawler/util"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/gocolly/colly/v2"
+
+	"novel_crawler/constant"
+	"novel_crawler/internal/model"
+	"novel_crawler/util"
 )
 
 type TangThuVienAdapter struct {

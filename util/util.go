@@ -1,10 +1,11 @@
 package util
 
 import (
+	"sort"
 	"strconv"
 	"strings"
+
 	"novel_crawler/internal/model"
-	"sort"
 )
 
 func Max(num1, num2 int) int {
