@@ -1,14 +1,14 @@
 package source_adapter
 
 import (
-	"strconv"
-	"strings"
-	"golang.org/x/sync/errgroup"
-	"github.com/gocolly/colly/v2"
 	"fmt"
+	"github.com/gocolly/colly/v2"
+	"golang.org/x/sync/errgroup"
 	"novel_crawler/constant"
 	"novel_crawler/internal/model"
 	"novel_crawler/util"
+	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -205,6 +205,16 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailNovel(request *model.GetDet
 
 	truyenFullAdapter.collector.Wait()
 
+	// fmt.Println(numPage)
+	// data, _ := truyenFullAdapter.GetDetailNovel(&model.GetDetailNovelRequest{
+	// 	NovelId: request.NovelId,
+	// 	Page:    "1",
+	// })
+
+	// // chapters = truyenFullAdapter.GetAllChapterGoRoutine(data.NumPage, request.NovelId)
+	// // novel.Chapters = chapters
+	// // fmt.Println(len(chapters))
+
 	return &model.GetDetailNovelResponse{
 		Novel:   novel,
 		NumPage: numPage,
@@ -282,8 +292,21 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailChapter(request *model.GetD
 		Page:    "1",
 	})
 
-	size := data.NumPage
+	if data.Novel != nil {
+		chapters = data.Novel.Chapters
+		novel.Chapters = chapters
+	}
 
+	return &model.GetDetailChapterResponse{
+		Novel:           novel,
+		CurrentChapter:  currentChapter,
+		PreviousChapter: prevChapter,
+		NextChapter:     nextChapter,
+	}, nil
+}
+
+func (truyenFullAdapter *TruyenFullAdapter) GetAllChapterGoRoutine(size int, novelId string) []*model.Chapter {
+	var chapters []*model.Chapter
 	numGoroutines := size / 2
 	chunkSize := size / numGoroutines
 
@@ -298,43 +321,35 @@ func (truyenFullAdapter *TruyenFullAdapter) GetDetailChapter(request *model.GetD
 		}
 
 		g.Go(func() error {
-			func(start, end int, adapter SourceAdapter) {
+			func(start, end int, adapter SourceAdapter, novelId string) {
+				fmt.Println(novelId)
 				paritalChapters := []*model.Chapter{}
 				mu.Lock()
 				for j := start; j < end; j++ {
 					temp, err := truyenFullAdapter.GetDetailNovel(&model.GetDetailNovelRequest{
-						NovelId: request.NovelId,
-						Page:    strconv.Itoa(j+1),
+						NovelId: novelId,
+						Page:    strconv.Itoa(j + 1),
 					})
 
 					if err != nil {
 						return
 					}
-					
+
 					paritalChapters = append(paritalChapters, temp.Novel.Chapters...)
 
 				}
-				
+
 				chapters = append(chapters, paritalChapters...)
 				mu.Unlock()
-			}(start, end, truyenFullAdapter)
+			}(start, end, truyenFullAdapter, novelId)
 			return nil
 		})
 	}
 
 	if err := g.Wait(); err != nil {
 		fmt.Println(err.Error())
-		return nil, err
+		return nil
 	}
 	chapters = util.SortChapter(chapters)
-	novel.Chapters = chapters
-	fmt.Println(len(chapters))
-
-
-	return &model.GetDetailChapterResponse{
-		Novel:           novel,
-		CurrentChapter:  currentChapter,
-		PreviousChapter: prevChapter,
-		NextChapter:     nextChapter,
-	}, nil
+	return chapters
 }

@@ -94,14 +94,19 @@ func (service *Service) GetDetailChapter(request *model.GetDetailChapterRequest)
 	source := *service.SourceAdapterManager.CurrentSource
 	var sources []string
 	var respone *model.GetDetailChapterResponse
-
+	check := 0
 	for result := range resultChan {
 		if result.CurrentChapter.Title != "" {
 			sources = append(sources, result.CurrentSource)
 			if result.CurrentSource == request.SourceDomain {
 				respone = result
+				check = 1
 			}
 			if result.CurrentSource == source.GetDomain() {
+				respone = result
+				check = 1
+			}
+			if (check == 0 ) {
 				respone = result
 			}
 		}

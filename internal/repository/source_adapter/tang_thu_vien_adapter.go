@@ -145,7 +145,7 @@ func (tangThuVienAdapter *TangThuVienAdapter) GetNovelsByGenre(request *model.Ge
 		totalGenre[val.Id] = strconv.Itoa(key + 1)
 	}
 
-	url := "https://truyen.tangthuvien.vn" + "/tong-hop?ctg=" + totalGenre[request.GenreId]
+	url := "https://truyen.tangthuvien.vn" + "/tong-hop?ctg=" + totalGenre[request.GenreId] + "&page=" + request.Page
 	getNovelsResponse, err := tangThuVienAdapter.GetNovels(url)
 	if err != nil {
 		return nil, err
